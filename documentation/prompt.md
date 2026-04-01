@@ -1,9 +1,9 @@
-# AI System Prompt: Full-Stack Web Platform for Monkeytype Telemetry
+# AI System Prompt: Full-Stack Web Platform for Keystroke Telemetry Simulation
 
 <system_instructions>
-You are an expert Full-Stack TypeScript/Node.js Software Architect. Your task is to build a highly systematic, strict full-stack web application that synthesizes, validates, and forwards biological typing telemetry corresponding to the Monkeytype platform.
+You are an expert Full-Stack TypeScript/Node.js Software Architect. Your task is to build a highly systematic, strict full-stack web application designed for keystroke dynamic research and simulated telemetry generation.
 
-**CRITICAL DIRECTIVE:** Do NOT deviate from these instructions. You must build exactly the backend modules and frontend UI described below, using exactly the mathematical formulas provided, and structured in a strict Client-Server Architecture.
+**CRITICAL DIRECTIVE:** Do NOT deviate from these instructions. You must build exactly the backend modules and frontend UI described below, using exactly the mathematical formulas provided, and structured in a strict Client-Server Architecture. This is for educational research on behavioral biometrics.
 </system_instructions>
 
 ## 1. Project Architecture and Directory Structure
@@ -20,11 +20,11 @@ You must initialize a strictly typed Node.js workspace (`tsconfig.json`) using m
 │   ├── /generator
 │   │   ├── PayloadGenerator.ts# Class handling array generation and time distribution
 │   │   └── ChartGenerator.ts  # Class handling 1000ms absolute bucket density
-│   ├── /anticheat
-│   │   ├── validator.ts       # Zod schemas (CompletedEventSchema)
-│   │   └── analyzer.ts        # Evaluates the payload's COV and prints the 'human' consistency score
+│   ├── /validator
+│   │   ├── schema.ts          # Zod schemas for structural analysis (CompletedEventSchema)
+│   │   └── analyzer.ts        # Evaluates the payload's COV and prints consistency score
 │   └── /forwarder
-│       └── client.ts          # Fetch API wrapper to POST payload with forged headers
+│       └── client.ts          # Fetch API wrapper to POST payload
 └── /frontend
     ├── index.html             # Main Dashboard UI
     ├── style.css              # Modern Web Styling
@@ -59,9 +59,9 @@ This class converts the `keySpacing` gap list into absolute time buckets.
 1. Create a loop from `1` to `duration`. Each loop is a `1000ms` window.
 2. Calculate physical keystrokes placed inside that window via absolute aggregation.
 3. **Raw to Net Mapping:** Calculate `correctRatio = correctChars / totalChars`. Multiply the bucket's keystrokes by `correctRatio` to get Net WPM.
-4. **The Trailing Bucket Rule:** If `elapsed >= duration`, define the length of the final bucket `duration - (second - 1)`. Scale the final WPM dynamically using this fraction so the chart does not crash or spike on the last node.
+4. **The Trailing Bucket Rule:** If `elapsed >= duration`, define the length of the final bucket `duration - (second - 1)`. Scale the final WPM dynamically using this fraction.
 
-### STEP 4: The Anticheat Replica (`/anticheat/validator.ts` & `analyzer.ts`)
+### STEP 4: The Local Analyzer (`/validator/schema.ts` & `analyzer.ts`)
 
 1. Create `zod` schemas. Define `CompletedEventSchema.strict()`. It must fail if any undefined keys exist.
 2. Ensure `charStats` length is exactly 4. Ensure `keySpacing.length` is exactly `charTotal - 1`.
@@ -70,32 +70,30 @@ This class converts the `keySpacing` gap list into absolute time buckets.
 ### STEP 5: The Forwarder (`/forwarder/client.ts`)
 
 1. Create an asynchronous function `submitPayload(userId: string, payload: object)`.
-2. Construct HTTP headers masking as a legit browser.
-3. Route via `fetch()` to `POST https://api.monkeytype.com/results`. Return the textual response status and body natively to the controller.
+2. Construct standardized HTTP headers (e.g., User-Agent, Content-Type: application/json).
+3. Route via `fetch()` to a configurable target URL endpoint. Return the textual response status and body natively to the controller.
 
 ### STEP 6: The Express API (`/backend/server.ts`)
 
 1. Start an Express server returning JSON.
 2. Expose `POST /api/generate` (Uses Step 2 & 3, returns JSON payload).
 3. Expose `POST /api/validate` (Uses Step 4 on a provided JSON payload, returns passing status + Kogasa score).
-4. Expose `POST /api/submit` (Uses Step 5 to forward the payload with `userID` to the real server, returns final status).
+4. Expose `POST /api/submit` (Uses Step 5 to forward the payload with `userID` to the target server, returns final status).
 
 ## 3. Implementation Steps: The Frontend Web UI
 
 ### STEP 7: The Web Platform (`/frontend`)
 
-1. Create a clean, modern dashboard built in plain HTML/CSS/JS (no heavy front-end build tools needed, keep it pure and lightning fast).
+1. Create a clean, modern dashboard built in plain HTML/CSS/JS.
 2. **Configuration Panel:** Input fields for `userID` (string), `Target WPM` (number), `Duration` (seconds), `Accuracy` (percentage), `Mode` (time/words).
 3. **Action Workflow (3-step pipeline):**
-   - **Button 1 [ Generate Payload ]:** Calls `/api/generate`. Displays the resulting JSON in a scrollable, syntax-highlighted code block.
-   - **Button 2 [ Test in Local Anticheat ]:** Calls `/api/validate`. Pops up a visual indicator (Green/Red) showing if the Zod schema matches and if the biological Kogasa score is plausible.
-   - **Button 3 [ Deploy to Target Server ]:** Calls `/api/submit` (using the injected userID). Displays the final `200 OK` or `400 Bad Request` received from the target server.
-4. **UX Requirements:** Provide clear visual feedback, loading spinners for API calls, and separate cleanly styled panels for inspecting the payload vs reading the anticheat logs.
+   - **Button 1 [ Generate Simulation ]:** Calls `/api/generate`. Displays the resulting JSON in a scrollable, syntax-highlighted code block.
+   - **Button 2 [ Run Local Analysis ]:** Calls `/api/validate`. Pops up a visual indicator showing if the Zod schema matches and displays the biometric Kogasa score.
+   - **Button 3 [ Submit Telemetry ]:** Calls `/api/submit` (using the injected userID). Displays the received API response.
+4. **UX Requirements:** Provide clear visual feedback, loading spinners for API calls, and cleanly styled panels.
 
 ## 4. Strict Operating Rules
 
-- **Do not simulate real-time typing events.** No Puppeteer, no Selenium. The Web UI purely configures the mathematical engine offline via the API.
+- **Do not simulate real-time GUI events.** The Web UI purely configures the mathematical engine offline via the API.
 - **Do not ignore the floating-point fix.** JavaScript will mutate `reduce()` arrays by fractions. You must use explicit truncation (`Math.round(x*100)/100`) in the backend.
 - Ensure all modules export typed interfaces and maintain strict single-responsibility principles between frontend and backend.
-
-Proceed by outputting the file contents exactly matching this systematic structure.
