@@ -704,6 +704,8 @@ function downloadPayload() {
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    // Initial generation
-    setTimeout(generatePayload, 100);
+    if (document.getElementById('mode')) {
+        // Initial generation (only in standalone mode)
+        setTimeout(generatePayload, 100);
+    }
 });
