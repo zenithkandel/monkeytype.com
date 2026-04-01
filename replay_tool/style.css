@@ -31,7 +31,8 @@ header {
     padding-bottom: 10px;
 }
 
-h1, h3 {
+h1,
+h3 {
     color: var(--accent-color);
     font-weight: normal;
 }
@@ -89,7 +90,8 @@ textarea {
     outline: none;
 }
 
-input:focus, textarea:focus {
+input:focus,
+textarea:focus {
     border-color: var(--accent-color);
 }
 
