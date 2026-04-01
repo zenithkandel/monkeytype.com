@@ -95,7 +95,6 @@ const payload = {
         acc: 100,
         mode: "time",
         mode2: String(testDuration),
-        quoteLength: -1,
         punctuation: false,
         numbers: false,
         lazyMode: false,
