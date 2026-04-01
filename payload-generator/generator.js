@@ -152,24 +152,24 @@ class HumanTypingGenerator {
         let currentSum = gaps.reduce((a, b) => a + b, 0);
         let diff = targetSum - currentSum;
         let attempts = 0;
-        
+
         while (Math.abs(diff) > 0.1 && attempts < 5000) {
             const add = diff > 0;
             const step = diff / gaps.length;
-            
+
             for (let i = 0; i < gaps.length; i++) {
                 const oldVal = gaps[i];
                 let newVal = oldVal + (Math.abs(step) * (add ? 1 : -1) * (0.8 + Math.random() * 0.4));
-                
+
                 if (!add) {
-                    if (oldVal >= 300) newVal = Math.max(300.1, newVal); 
-                    else if (oldVal >= 80) newVal = Math.max(80.1, newVal); 
-                    else newVal = Math.max(20.1, newVal); 
+                    if (oldVal >= 300) newVal = Math.max(300.1, newVal);
+                    else if (oldVal >= 80) newVal = Math.max(80.1, newVal);
+                    else newVal = Math.max(20.1, newVal);
                 } else {
                     if (oldVal < 80) newVal = Math.min(79.9, newVal);
                     else if (oldVal < 300) newVal = Math.min(299.9, newVal);
                 }
-                
+
                 diff -= (newVal - oldVal);
                 gaps[i] = newVal;
                 if (Math.abs(diff) <= 0.1) break;
@@ -319,7 +319,7 @@ class HumanTypingGenerator {
         let absoluteTimes = [];
         let currentAbs = startToFirstKey;
         absoluteTimes.push(currentAbs);
-        for(const gap of keySpacing) {
+        for (const gap of keySpacing) {
             currentAbs += gap;
             absoluteTimes.push(currentAbs);
         }
@@ -331,9 +331,9 @@ class HumanTypingGenerator {
             let startSec = (s - 1) * 1000;
             let endSec = s * 1000;
             let isLastBucket = (s === numSeconds && totalTimeSec % 1 !== 0);
-            if(isLastBucket) { endSec = totalTimeSec * 1000; }
+            if (isLastBucket) { endSec = totalTimeSec * 1000; }
             let keysInBucket = 0;
-            while(keysProcessed < absoluteTimes.length && absoluteTimes[keysProcessed] <= endSec) {
+            while (keysProcessed < absoluteTimes.length && absoluteTimes[keysProcessed] <= endSec) {
                 keysInBucket++;
                 keysProcessed++;
             }
@@ -424,7 +424,7 @@ class HumanTypingGenerator {
         const lastKeyToEnd = Math.max(0, Math.round((remainingTime - startToFirstKey) * 100) / 100);
 
         // Generate chart data
-        
+
         const { wpmData: chartWpm, burstData: chartBurst, errData: chartErr } = this.generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc, charStats);
 
 
