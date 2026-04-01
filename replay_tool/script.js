@@ -41,7 +41,10 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsText(file);
     });
 
+    let currentPayload = {};
+
     function populateForm(data) {
+        currentPayload = Object.assign({}, data);
         const missing = [];
 
         expectedFields.forEach(field => {
@@ -81,7 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             timestampInput.value = Date.now();
         }
 
-        const payload = {};
+        const payload = Object.assign({}, currentPayload);
 
         try {
             // Numbers
@@ -90,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 'incompleteTestSeconds', 'keyOverlap', 'lastKeyToEnd', 'startToFirstKey',
                 'consistency', 'wpmConsistency', 'keyConsistency', 'testDuration', 'afkDuration'
             ];
-            numFields.forEach(f => payload[f] = parseFloat(document.getElementById(f).value) || 0);
+            numFields.forEach(f => payload[f] = Number(document.getElementById(f).value));
 
             // Strings
             const strFields = ['mode', 'mode2', 'language', 'difficulty', 'uid', 'hash'];
@@ -118,6 +121,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 const generatedHash = objectHash(payload);
                 payload.hash = generatedHash;
                 document.getElementById('hash').value = generatedHash; // Update UI
+            } else {
+                payload.hash = document.getElementById('hash').value;
             }
 
             const token = document.getElementById('token').value.trim();
