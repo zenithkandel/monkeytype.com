@@ -1,12 +1,31 @@
 document.addEventListener('DOMContentLoaded', () => {
     const jsonFileInput = document.getElementById('jsonFile');
+    const jsonPasteInput = document.getElementById('jsonPaste');
+    const loadPastedJsonBtn = document.getElementById('loadPastedJson');
     const missingFieldsMsg = document.getElementById('missingFieldsMsg');
+    const successMsg = document.getElementById('successMsg');
     const form = document.getElementById('replayForm');
     const btnNow = document.getElementById('btnNow');
     const autoTimestamp = document.getElementById('autoTimestamp');
     const timestampInput = document.getElementById('timestamp');
     const responseContainer = document.getElementById('responseContainer');
     const responseBox = document.getElementById('responseBox');
+
+    // Tab switching
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.getAttribute('data-tab');
+
+            tabBtns.forEach(b => b.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            btn.classList.add('active');
+            document.getElementById('tab-' + tabId).classList.add('active');
+        });
+    });
 
     // Expected fields for validation
     const expectedFields = [
@@ -23,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         timestampInput.value = Date.now();
     });
 
-    // Handle JSON Load
+    // Handle JSON file upload
     jsonFileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -32,20 +51,76 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.onload = (evt) => {
             try {
                 const data = JSON.parse(evt.target.result);
-                const result = data.result || data; // Handle if wrapped in 'result'
-                populateForm(result);
+                loadPayloadData(data);
             } catch (err) {
-                alert('Invalid JSON file');
+                showError('Invalid JSON file: ' + err.message);
             }
         };
         reader.readAsText(file);
     });
 
+    // Handle pasted JSON
+    loadPastedJsonBtn.addEventListener('click', () => {
+        const jsonText = jsonPasteInput.value.trim();
+        if (!jsonText) {
+            showError('Please paste JSON data first');
+            return;
+        }
+
+        try {
+            const data = JSON.parse(jsonText);
+            loadPayloadData(data);
+        } catch (err) {
+            showError('Invalid JSON: ' + err.message);
+        }
+    });
+
+    /**
+     * Unified function to load payload data from any source
+     * Supports multiple formats:
+     * - Generator output: {result: {...}}
+     * - Direct result object: {wpm: ..., keySpacing: [...], ...}
+     * - Wrapped payload: {payload: {result: {...}}}
+     */
+    function loadPayloadData(data) {
+        let result;
+
+        // Handle different formats
+        if (data.result) {
+            // Generator format: {result: {...}}
+            result = data.result;
+        } else if (data.payload && data.payload.result) {
+            // Wrapped format: {payload: {result: {...}}}
+            result = data.payload.result;
+        } else if (data.wpm !== undefined && data.keySpacing !== undefined) {
+            // Direct result object
+            result = data;
+        } else {
+            showError('Unrecognized JSON format. Expected "result" object or direct payload.');
+            return;
+        }
+
+        populateForm(result);
+    }
+
     let currentPayload = {};
+
+    function showError(message) {
+        missingFieldsMsg.style.display = 'block';
+        missingFieldsMsg.textContent = message;
+        successMsg.style.display = 'none';
+    }
+
+    function showSuccess(message) {
+        successMsg.style.display = 'block';
+        successMsg.textContent = message;
+        missingFieldsMsg.style.display = 'none';
+    }
 
     function populateForm(data) {
         currentPayload = Object.assign({}, data);
         const missing = [];
+        const populated = [];
 
         expectedFields.forEach(field => {
             if (data[field] === undefined) {
@@ -67,13 +142,23 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 el.value = val;
             }
+
+            populated.push(field);
         });
 
         if (missing.length > 0) {
-            missingFieldsMsg.style.display = 'block';
-            missingFieldsMsg.textContent = `Missing fields in JSON (please fill manually): ${missing.join(', ')}`;
+            // Check if missing fields are optional or have defaults
+            const criticalMissing = missing.filter(f =>
+                !['hash', 'timestamp', 'uid'].includes(f)
+            );
+
+            if (criticalMissing.length > 0) {
+                showError(`Missing fields (please fill manually): ${criticalMissing.join(', ')}`);
+            } else {
+                showSuccess(`✅ Loaded ${populated.length} fields. Note: ${missing.join(', ')} will be auto-generated or need manual input.`);
+            }
         } else {
-            missingFieldsMsg.style.display = 'none';
+            showSuccess(`✅ Successfully loaded all ${populated.length} fields from JSON!`);
         }
     }
 
