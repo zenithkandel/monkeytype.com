@@ -1,2 +1,0 @@
-var n=(e,r,a)=>new Promise((c,o)=>{var E=t=>{try{l(a.next(t))}catch(u){o(u)}},s=t=>{try{l(a.throw(t))}catch(u){o(u)}},l=t=>t.done?c(t.value):Promise.resolve(t.value).then(E,s);l((a=a.apply(e,r)).next())});function y(e){return n(this,null,function*(){try{return{data:yield e,error:null}}catch(r){return{data:null,error:r}}})}function d(e){try{return{data:e(),error:null}}catch(r){return{data:null,error:r}}}export{y as tryCatch,d as tryCatchSync};
-//# sourceMappingURL=trycatch.mjs.map

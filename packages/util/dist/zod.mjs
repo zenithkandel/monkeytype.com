@@ -1,2 +1,0 @@
-import{ZodError as n}from"zod";function t(r){return r instanceof Error?!!(r instanceof n||r.constructor.name==="ZodError"||"issues"in r&&Array.isArray(r.issues)):!1}export{t as isZodError};
-//# sourceMappingURL=zod.mjs.map
