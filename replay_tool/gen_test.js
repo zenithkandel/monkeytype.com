@@ -28,9 +28,9 @@ function roundTo2(num) {
     return Math.round((num + Number.EPSILON) * 100) / 100;
 }
 
-const wpmTarget = 129.54;
+const wpmTarget = 150.32;
 const testDuration = 15;
-const charCount = Math.round((wpmTarget * 5) * (testDuration / 60)); // 162 total chars
+const charCount = Math.round((wpmTarget * 5) * (testDuration / 60)); // total chars
 // wait, wpm is formula: wpm = (charTotals / 5) / (testDuration / 60)
 // let's use exact WPM:
 const wpm = roundTo2((charCount / 5) / (testDuration / 60));
