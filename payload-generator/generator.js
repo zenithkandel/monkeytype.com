@@ -312,96 +312,41 @@ class HumanTypingGenerator {
      * Generate WPM chart data (per-second WPM values)
      * Creates natural variation with drift and bursts
      */
-    generateChartWpm(targetWpm, duration) {
-        const wpmData = [];
-        const numSeconds = Math.ceil(duration);
-
-        // Start slightly above/below target, then settle
-        let currentWpm = targetWpm + (Math.random() - 0.5) * 20;
-
-        for (let i = 0; i < numSeconds; i++) {
-            const progress = i / numSeconds;
-
-            // Trend towards target with noise
-            const drift = (targetWpm - currentWpm) * 0.3;
-            const noise = (Math.random() - 0.5) * 25;
-
-            // Fatigue - slight decrease towards end
-            const fatigue = progress > 0.7 ? -(progress - 0.7) * 10 : 0;
-
-            currentWpm += drift + noise + fatigue;
-
-            // Occasional burst or dip (5% chance each)
-            if (Math.random() < 0.05) currentWpm += Math.random() * 15;
-            if (Math.random() < 0.05) currentWpm -= Math.random() * 15;
-
-            // Keep within reasonable bounds
-            currentWpm = Math.max(targetWpm * 0.6, Math.min(targetWpm * 1.4, currentWpm));
-
-            wpmData.push(Math.round(currentWpm));
+    generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc) {
+        let wpmData = [];
+        let burstData = [];
+        let errData = [];
+        let absoluteTimes = [];
+        let currentAbs = startToFirstKey;
+        absoluteTimes.push(currentAbs);
+        for(const gap of keySpacing) {
+            currentAbs += gap;
+            absoluteTimes.push(currentAbs);
         }
-
-        return wpmData;
+        let totalTimeSec = testDuration;
+        let numSeconds = Math.ceil(totalTimeSec);
+        let keysProcessed = 0;
+        for (let s = 1; s <= numSeconds; s++) {
+            let startSec = (s - 1) * 1000;
+            let endSec = s * 1000;
+            let isLastBucket = (s === numSeconds && totalTimeSec % 1 !== 0);
+            if(isLastBucket) { endSec = totalTimeSec * 1000; }
+            let keysInBucket = 0;
+            while(keysProcessed < absoluteTimes.length && absoluteTimes[keysProcessed] <= endSec) {
+                keysInBucket++;
+                keysProcessed++;
+            }
+            let bucketDuration = isLastBucket ? totalTimeSec - (s - 1) : 1;
+            let burst = Math.round((keysInBucket / 5) * (60 / bucketDuration));
+            burstData.push(burst);
+            let wpmElapsed = isLastBucket ? totalTimeSec : s;
+            let currentWpm = Math.round((keysProcessed / 5) * (60 / wpmElapsed) * 100) / 100;
+            wpmData.push(currentWpm);
+            errData.push(0);
+        }
+        return { wpmData, burstData, errData };
     }
 
-    /**
-     * Generate burst speed data (raw WPM per second)
-     * More erratic than smoothed WPM
-     */
-    generateChartBurst(targetWpm, duration) {
-        const burstData = [];
-        const numSeconds = Math.ceil(duration);
-
-        // Burst values in increments of 12 (like real data: 36, 48, 60, 72, 84, 96, 108, 120, 132)
-        const burstValues = [36, 48, 60, 72, 84, 96, 108, 120, 132, 144];
-
-        // Find the closest burst values to target WPM
-        const baseIndex = burstValues.findIndex(v => v >= targetWpm);
-        const centerIndex = Math.max(0, Math.min(burstValues.length - 2, baseIndex - 1));
-
-        for (let i = 0; i < numSeconds; i++) {
-            // Weighted random selection around center
-            const offset = Math.floor(this.normalRandom() * 2);
-            const index = Math.max(0, Math.min(burstValues.length - 1, centerIndex + offset));
-            burstData.push(burstValues[index]);
-        }
-
-        return burstData;
-    }
-
-    /**
-     * Generate error distribution
-     * Errors cluster together (not evenly distributed)
-     */
-    generateChartErrors(duration, targetAcc) {
-        const errors = [];
-        const numSeconds = Math.ceil(duration);
-
-        // Calculate expected errors based on accuracy
-        const errorRate = (100 - targetAcc) / 100;
-        const expectedTotalErrors = Math.round(numSeconds * 5 * errorRate); // ~5 chars per second
-
-        // Initialize with zeros
-        for (let i = 0; i < numSeconds; i++) {
-            errors.push(0);
-        }
-
-        // Distribute errors in clusters
-        let remainingErrors = expectedTotalErrors;
-        while (remainingErrors > 0) {
-            const pos = Math.floor(Math.random() * numSeconds);
-            const clusterSize = Math.min(remainingErrors, Math.floor(Math.random() * 3) + 1);
-            errors[pos] += clusterSize;
-            remainingErrors -= clusterSize;
-        }
-
-        return errors;
-    }
-
-    /**
-     * Calculate Kogasa consistency score
-     * kogasa(cv) = 100 * (1 - tanh(cv + cv³/3 + cv⁵/5))
-     */
     kogasa(cv) {
         const taylorSum = cv + Math.pow(cv, 3) / 3 + Math.pow(cv, 5) / 5;
         return 100 * (1 - Math.tanh(taylorSum));
