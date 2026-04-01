@@ -231,7 +231,7 @@ class HumanTypingGenerator {
             // This mimics JavaScript's floating point representation quirks
             const fpArtifact = (Math.random() - 0.5) * 0.0001;
             duration = duration + fpArtifact;
-            
+
             // Apply a small random offset that creates the typical browser timestamp patterns
             if (Math.random() > 0.3) {
                 // About 70% have the typical artifact pattern
