@@ -102,25 +102,25 @@ class HumanTypingGenerator {
         // Determine bucket counts to satisfy Anticheat explicitly
         // 1. Long Pauses (>= 300ms). Need at least 2% to pass. Let's aim for 2.5%
         let longPauseCount = Math.ceil(numGaps * 0.025);
-        
+
         // 2. Bursts (< 80ms). Must be <= 50% to pass. We'll aim for exactly 48%.
         let burstCount = Math.floor(numGaps * 0.48);
-        
+
         // 3. Normal (80ms - 299ms). The remainder.
         let normalCount = numGaps - longPauseCount - burstCount;
 
         // If WPM is extremely high, we might mathematically not be able to afford the long pauses or normals.
         // Minimum possible sum given these buckets:
         const absoluteMinSum = (longPauseCount * 300) + (normalCount * 80) + (burstCount * 20);
-        
+
         if (targetSum < absoluteMinSum) {
             // It is physically impossible to meet all bounds!
             // We must sacrifice buckets to fit the time.
             // 1st sacrifice: drop long pauses (they cost 300ms each, losing them just costs 10 points in anticheat)
             longPauseCount = 0;
-            burstCount = Math.floor(numGaps * 0.48); 
+            burstCount = Math.floor(numGaps * 0.48);
             normalCount = numGaps - burstCount;
-            
+
             const minSumLevel2 = (normalCount * 80) + (burstCount * 20);
             if (targetSum < minSumLevel2) {
                 // 2nd sacrifice: drop normals, meaning we will fail maxBurstRatio (but will pass valueBounds and CV)
@@ -132,7 +132,7 @@ class HumanTypingGenerator {
 
         // Generate base values in their exact constrained bounds
         const gaps = [];
-        
+
         for (let i = 0; i < longPauseCount; i++) {
             gaps.push(300 + Math.random() * 100);
         }
@@ -150,7 +150,7 @@ class HumanTypingGenerator {
 
         // Iterative bounded scaling to hit EXACT targetSum
         let currentSum = gaps.reduce((a, b) => a + b, 0);
-        const iterations = 50; 
+        const iterations = 50;
 
         for (let iter = 0; iter < iterations; iter++) {
             currentSum = gaps.reduce((a, b) => a + b, 0);
@@ -180,8 +180,8 @@ class HumanTypingGenerator {
 
         // Return rounded to 1 decimal place. We must handle the rounding error though!
         const roundedGaps = gaps.map(s => Math.round(s * 10) / 10);
-        const roundedSum = roundedGaps.reduce((a,b) => a+b, 0);
-        
+        const roundedSum = roundedGaps.reduce((a, b) => a + b, 0);
+
         // Exact 1st-decimal correction
         let floatCorrection = Math.round((targetSum - roundedSum) * 10);
         let idx = 0;
