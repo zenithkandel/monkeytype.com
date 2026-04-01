@@ -41,20 +41,20 @@ while (true) {
     // Generate next key time
     let r1 = Math.random(), r2 = Math.random(), r3 = Math.random();
     let randDist = (r1 + r2 + r3 - 1.5) * 2; // -3 to +3
-    
-    let span = meanKeySpan + (randDist * 8); 
+
+    let span = meanKeySpan + (randDist * 8);
     if (span < 20) span = 20; // Human limit
-    
+
     if (currentTime + span > testDuration * 1000) {
         break; // Test ends strictly at 15s
     }
-    
+
     keySpacing.push(Number(span.toFixed(1)));
     currentTime += span;
     timestamps.push(currentTime);
-    
+
     let kDuration = span * 0.75 + (randDist * 6);
-    if(kDuration < 10) kDuration = 10;
+    if (kDuration < 10) kDuration = 10;
     keyDuration.push(Number(kDuration.toFixed(1)));
 }
 
@@ -69,17 +69,17 @@ let errData = [];
 for (let sec = 1; sec <= testDuration; sec++) {
     let charsUpToNow = timestamps.filter(t => t <= sec * 1000).length;
     let charsInThisSec = timestamps.filter(t => t > (sec - 1) * 1000 && t <= sec * 1000).length;
-    
+
     let secWpm = roundTo2((charsUpToNow / 5) / (sec / 60));
     let burstWpm = Math.round((charsInThisSec / 5) * 60);
-    
+
     wpmData.push(secWpm);
     burstData.push(burstWpm);
     errData.push(0);
 }
 
 // Consistency
-let keyConsCov = stdDev(keySpacing) / mean(keySpacing);       
+let keyConsCov = stdDev(keySpacing) / mean(keySpacing);
 let keyConsistency = roundTo2(kogasa(keyConsCov));
 
 let wpmConsCov = stdDev(wpmData) / mean(wpmData);
@@ -125,7 +125,7 @@ const payload = {
         testDuration: testDuration,
         afkDuration: 0,
         stopOnLetter: false,
-        uid: "dQLw9pqNo3e4mWSWxW6gGvGuFX83", 
+        uid: "dQLw9pqNo3e4mWSWxW6gGvGuFX83",
         hash: ""
     }
 };
