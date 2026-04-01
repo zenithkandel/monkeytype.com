@@ -201,8 +201,12 @@
           <div class="form-group">
             <label>UID</label><input type="text" id="uid" required />
           </div>
-          <div class="form-group">
-            <label>Hash</label><input type="text" id="hash" required />
+          <div class="form-group full-width timestamp-group">
+            <label>Hash</label>
+            <div class="ts-controls">
+              <input type="text" id="hash" required />
+              <label><input type="checkbox" id="autoHash" checked /> Auto on Submit</label>
+            </div>
           </div>
         </div>
 
@@ -214,6 +218,7 @@
         <pre id="responseBox"></pre>
       </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/object-hash@3.0.0/dist/object_hash.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
