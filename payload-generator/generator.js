@@ -477,9 +477,9 @@ class HumanTypingGenerator {
         const lastKeyToEnd = Math.max(0, Math.round(remainingTime * 0.7 * 100) / 100);
 
         // Generate chart data
-        const chartWpm = this.generateChartWpm(targetWpm, testDuration);
-        const chartBurst = this.generateChartBurst(targetWpm, testDuration);
-        const chartErr = this.generateChartErrors(testDuration, targetAcc);
+        
+        const { wpmData: chartWpm, burstData: chartBurst, errData: chartErr } = this.generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc);
+
 
         // Calculate consistency metrics
         const spacingMean = this.mean(keySpacing);
