@@ -312,7 +312,7 @@ class HumanTypingGenerator {
      * Generate WPM chart data (per-second WPM values)
      * Creates natural variation with drift and bursts
      */
-    generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc) {
+    generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc, charStats) {
         let wpmData = [];
         let burstData = [];
         let errData = [];
@@ -326,6 +326,7 @@ class HumanTypingGenerator {
         let totalTimeSec = testDuration;
         let numSeconds = Math.ceil(totalTimeSec);
         let keysProcessed = 0;
+        let correctRatio = charStats[0] / (charStats[0] + charStats[1] + charStats[2] + charStats[3]);
         for (let s = 1; s <= numSeconds; s++) {
             let startSec = (s - 1) * 1000;
             let endSec = s * 1000;
@@ -340,10 +341,11 @@ class HumanTypingGenerator {
             let burst = Math.round((keysInBucket / 5) * (60 / bucketDuration));
             burstData.push(burst);
             let wpmElapsed = isLastBucket ? totalTimeSec : s;
-            let currentWpm = Math.round((keysProcessed / 5) * (60 / wpmElapsed) * 100) / 100;
+            let currentWpm = Math.round(((keysProcessed * correctRatio) / 5) * (60 / wpmElapsed) * 100) / 100;
             wpmData.push(currentWpm);
             errData.push(0);
         }
+        if (wpmData.length > 0) wpmData[wpmData.length - 1] = Math.round((charStats[0] / 5) * (60 / testDuration) * 100) / 100;
         return { wpmData, burstData, errData };
     }
 
@@ -413,17 +415,17 @@ class HumanTypingGenerator {
         const keyOverlap = this.calculateKeyOverlap(targetWpm, keyDuration, keySpacing);
 
         // Calculate actual timing
-        const totalSpacingTime = keySpacing.reduce((a, b) => a + b, 0);
-        const remainingTime = (testDuration * 1000) - totalSpacingTime;
+        const totalSpacingTime = Math.round(keySpacing.reduce((a, b) => a + b, 0) * 100) / 100;
+        const remainingTime = Math.round(((testDuration * 1000) - totalSpacingTime) * 100) / 100;
 
         // startToFirstKey and lastKeyToEnd should add up with spacing to equal duration
         // These are decimals rounded to 2 decimal places (like real data: 275.38, 124.8)
         const startToFirstKey = Math.max(0, Math.round(remainingTime * 0.3 * 100) / 100);
-        const lastKeyToEnd = Math.max(0, Math.round(remainingTime * 0.7 * 100) / 100);
+        const lastKeyToEnd = Math.max(0, Math.round((remainingTime - startToFirstKey) * 100) / 100);
 
         // Generate chart data
         
-        const { wpmData: chartWpm, burstData: chartBurst, errData: chartErr } = this.generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc);
+        const { wpmData: chartWpm, burstData: chartBurst, errData: chartErr } = this.generateChartData(keySpacing, startToFirstKey, testDuration, targetAcc, charStats);
 
 
         // Calculate consistency metrics
