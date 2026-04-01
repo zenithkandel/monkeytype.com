@@ -55,6 +55,77 @@ h3 {
     color: #ff6b6b;
     margin-top: 10px;
     font-size: 0.9em;
+    padding: 10px;
+    background: rgba(255, 107, 107, 0.1);
+    border-radius: 4px;
+}
+
+.success-msg {
+    color: #4caf50;
+    margin-top: 10px;
+    font-size: 0.9em;
+    padding: 10px;
+    background: rgba(76, 175, 80, 0.1);
+    border-radius: 4px;
+}
+
+/* Input method tabs */
+.input-methods {
+    margin-bottom: 10px;
+}
+
+.input-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.tab-btn {
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: #888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+    background: rgba(226, 183, 20, 0.1);
+}
+
+.tab-btn:hover {
+    border-color: var(--accent-color);
+    color: var(--accent-color);
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+#jsonPaste {
+    width: 100%;
+    min-height: 150px;
+    margin-bottom: 10px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 0.85em;
+}
+
+.load-btn {
+    background: var(--accent-color);
+    color: var(--bg-color);
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+}
+
+.load-btn:hover {
+    opacity: 0.9;
 }
 
 .form-grid {

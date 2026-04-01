@@ -14,15 +14,44 @@
       </header>
 
       <div class="controls">
-        <div class="file-upload">
-          <label for="jsonFile">Load from JSON:</label>
-          <input type="file" id="jsonFile" accept=".json" />
+        <div class="input-methods">
+          <div class="input-tabs">
+            <button type="button" class="tab-btn active" data-tab="paste">
+              📋 Paste JSON
+            </button>
+            <button type="button" class="tab-btn" data-tab="file">
+              📁 Upload File
+            </button>
+          </div>
+
+          <div class="tab-content active" id="tab-paste">
+            <label for="jsonPaste">Paste JSON Payload:</label>
+            <textarea
+              id="jsonPaste"
+              placeholder='Paste your payload JSON here...
+
+Supports formats:
+• Generator output: {"result": {...}}
+• Direct result object: {"wpm": 90, ...}
+• Raw payload from MonkeyType'
+            ></textarea>
+            <button type="button" id="loadPastedJson" class="load-btn">
+              Load JSON
+            </button>
+          </div>
+
+          <div class="tab-content" id="tab-file">
+            <label for="jsonFile">Load from JSON file:</label>
+            <input type="file" id="jsonFile" accept=".json" />
+          </div>
         </div>
+
         <div
           class="missing-fields"
           id="missingFieldsMsg"
           style="display: none"
         ></div>
+        <div class="success-msg" id="successMsg" style="display: none"></div>
       </div>
 
       <form id="replayForm">
