@@ -466,16 +466,17 @@ class HumanTypingGenerator {
         const keyConsistency = Math.round(this.kogasa(durationCV) * 100) / 100;
         const wpmConsistency = Math.round(this.kogasa(this.stdDev(chartWpm) / this.mean(chartWpm)) * 100) / 100;
 
-        // Calculate actual WPM from spacing
-        const actualWpm = Math.round((charTotal / 5) * (60 / testDuration) * 100) / 100;
-
         // Character stats
         const charStats = this.calculateCharStats(charTotal, targetAcc);
+
+        // Calculate actual WPM
+        const rawWpm = Math.round((charTotal / 5) * (60 / testDuration) * 100) / 100;
+        const actualWpm = Math.round((charStats[0] / 5) * (60 / testDuration) * 100) / 100;
 
         // Build result object (matching MonkeyType schema exactly)
         const result = {
             wpm: actualWpm,
-            rawWpm: Math.round((actualWpm + Math.random() * 4) * 100) / 100,
+            rawWpm: rawWpm,
             charStats: charStats,
             charTotal: charTotal,
             acc: Math.round(targetAcc * 100) / 100,

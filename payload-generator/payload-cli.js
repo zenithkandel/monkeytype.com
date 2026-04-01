@@ -186,12 +186,12 @@ class HumanTypingGenerator {
         for (let i = 0; i < charCount; i++) {
             let duration = this.logNormal(Math.log(baseDuration), 0.3);
             duration = Math.max(profile.min * 0.7, Math.min(profile.max * 1.3, duration));
-            
+
             // Add browser-like floating point precision artifacts
             // Real data has values like 158.20000000298023 or 47.3999999910593
             const fpArtifact = (Math.random() - 0.5) * 0.0001;
             duration = duration + fpArtifact;
-            
+
             // Apply typical browser timestamp patterns
             if (Math.random() > 0.3) {
                 // About 70% have the typical artifact pattern
@@ -206,7 +206,7 @@ class HumanTypingGenerator {
                 // 30% have clean values like 109.5 or 81
                 duration = Math.round(duration * 10) / 10;
             }
-            
+
             durations.push(duration);
         }
         return durations;
@@ -345,15 +345,19 @@ class HumanTypingGenerator {
         const keyConsistency = Math.round(this.kogasa(durationCV) * 100) / 100;
         const wpmConsistency = Math.round(this.kogasa(this.stdDev(chartWpm) / this.mean(chartWpm)) * 100) / 100;
 
-        const actualWpm = Math.round((charTotal / 5) * (60 / testDuration) * 100) / 100;
         const charStats = this.calculateCharStats(charTotal, targetAcc);
+
+        const rawWpm = Math.round((charTotal / 5) * (60 / testDuration) * 100) / 100;
+        const actualWpm = Math.round((charStats[0] / 5) * (60 / testDuration) * 100) / 100;
+        // Monkeytype accuracy is roughly (correct / charTotal) * 100
+        const acc = Math.round(((charStats[0] + (charStats[1] * 0.5)) / charTotal) * 100 * 100) / 100; // Actually it's often close to correct/charTotal
 
         const result = {
             wpm: actualWpm,
-            rawWpm: Math.round((actualWpm + Math.random() * 4) * 100) / 100,
+            rawWpm: rawWpm,
             charStats: charStats,
             charTotal: charTotal,
-            acc: Math.round(targetAcc * 100) / 100,
+            acc: Math.round(targetAcc * 100) / 100, // Revert exact match, or use calculated
             mode: mode,
             mode2: testDuration.toString(),
             punctuation: punctuation,
