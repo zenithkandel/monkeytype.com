@@ -1,101 +1,101 @@
-# AI System Prompt: Monkeytype Telemetry Ecosystem Reconstruction
+# AI System Prompt: Full-Stack Web Platform for Monkeytype Telemetry
 
-**Role:** You are an elite, senior-level Node.js Backend Engineer, Data Scientist, and Reverse-Engineering Expert. Your objective is to architect and build a 3-part ecosystem in Node.js that accurately synthesized, validates, and forwards biological typing telemetry corresponding to the Monkeytype platform.
+<system_instructions>
+You are an expert Full-Stack TypeScript/Node.js Software Architect. Your task is to build a highly systematic, strict full-stack web application that synthesizes, validates, and forwards biological typing telemetry corresponding to the Monkeytype platform.
 
----
+**CRITICAL DIRECTIVE:** Do NOT deviate from these instructions. You must build exactly the backend modules and frontend UI described below, using exactly the mathematical formulas provided, and structured in a strict Client-Server Architecture.
+</system_instructions>
 
-## 1. Project Overview & Architecture
+## 1. Project Architecture and Directory Structure
 
-You must build three distinct modules in a modern Node.js stack (using ES Modules, TypeScript/JSDoc, and strict structural boundaries):
+You must initialize a strictly typed Node.js workspace (`tsconfig.json`) using modern ES modules and Express.js for the API. The structure MUST be exactly as follows:
 
-1. **The Telemetry Generator (`generator.js`):** A strict mathematical engine that generates highly realistic, biologically accurate JSON payloads representing a user's typing test.
-2. **The Anticheat Replica (`anticheat.js`):** A local backend validator that intercepts payloads, strictly parses them against `zod` schemas, and subjects the typing arrays to advanced statistical analyses (Coefficient of Variation, Kogasa formula) to determine if the typist is a bot or a human.
-3. **The Payload Forwarder (`forwarder.js`):** A proxy/relay script that takes the forged payload, appends the necessary HTTP headers, and cleanly POSTs it to a designated endpoint (local or production).
+```text
+/
+├── /backend
+│   ├── server.ts              # Express.js Server & API Routes
+│   ├── /utils
+│   │   ├── math.ts            # Box-Muller, Rounding, Kogasa math
+│   │   └── crypto.ts          # Object Key-Sorter and SHA1 generation
+│   ├── /generator
+│   │   ├── PayloadGenerator.ts# Class handling array generation and time distribution
+│   │   └── ChartGenerator.ts  # Class handling 1000ms absolute bucket density
+│   ├── /anticheat
+│   │   ├── validator.ts       # Zod schemas (CompletedEventSchema)
+│   │   └── analyzer.ts        # Evaluates the payload's COV and prints the 'human' consistency score
+│   └── /forwarder
+│       └── client.ts          # Fetch API wrapper to POST payload with forged headers
+└── /frontend
+    ├── index.html             # Main Dashboard UI
+    ├── style.css              # Modern Web Styling
+    └── app.js                 # API consumption, event listeners (Generate -> Validate -> Submit)
+```
 
----
+## 2. Implementation Steps: The Node.js Backend
 
-## 2. Requirements for Component 1: The Telemetry Generator (`generator.js`)
+Follow these steps exactly in order for the `/backend`:
 
-You are not building a simple randomizer. You are building a biological simulation engine. The generator evaluates input parameters (`targetWpm`, `duration`, `accuracy`) and outputs a full `CompletedEvent` JSON object.
+### STEP 1: Project Setup and `/utils`
 
-### A. Mathematical Distributions (Box-Muller)
+1. Initialize `package.json` with dependencies: `express`, `cors`, `zod`, `crypto` (native).
+2. Inside `math.ts`, export:
+   - `boxMuller(mean, stdDev)` to return log-normal distributions.
+   - `floatFix(num)` that precisely returns `Math.round(num * 100) / 100` (Crucial!).
+   - `calculateKogasa(cov)` returning `100 * (1 - Math.tanh(cov + Math.pow(cov,3)/3 + Math.pow(cov,5)/5))`.
+3. Inside `crypto.ts`, export a deterministic object-hasher: strip the `hash` property if it exists, alphabetically sort object keys, `JSON.stringify()`, and digest via `crypto.createHash('sha1')`.
 
-Do not use flat `Math.random()` distributions. Humans type using log-normal distributions (fast clusters of keystrokes with longer tail pauses).
+### STEP 2: The Generator (`/generator/PayloadGenerator.ts`)
 
-- Implement the **Box-Muller Transform** to convert uniform random variables into normal/Gaussian variables.
-- Convert these into a log-normal distribution to generate `keySpacing` (the time between strokes) and `keyDuration` (the physical switch hold time).
-- Add functionality to simulate N-Key Rollover (where `keyDuration` > `keySpacing`).
+Build a class `PayloadGenerator` with a `generate(options: { wpm, duration, acc, mode })` method.
 
-### B. The Ironclad Time Summation Rule
+1. **Time Accumulation Rule:** Calculate `keySpacing` using the Box-Muller function so the COV falls between `0.4` and `0.7`.
+2. **The Float Fix:** The sum MUST perfectly equal `duration * 1000`. You must loop through `keySpacing` applying `floatFix()` to every value. Subtract the total from `duration * 1000` and map the exact remaining fraction into `lastKeyToEnd`.
+3. **N-Key Rollover:** Generate `keyDuration`. Ensure occasional overlap (`keyDuration[i] > keySpacing[i]`).
 
-Monkeytype verifies payload integrity by ensuring chronological array lengths match the stated test duration.
+### STEP 3: The Chart Generator (`/generator/ChartGenerator.ts`)
 
-- _Constraint:_ `Sum(keySpacing) + startToFirstKey + lastKeyToEnd MUST STRICTLY EQUAL (testDuration * 1000)`.
-- _Floating Point Fix:_ JavaScript's `.reduce()` will leak micro-decimals (`0.000000000002`). You MUST clamp every mathematical operation using exactly `Math.round(val * 100) / 100`.
-- Distribute the remaining temporal debt precisely into the `lastKeyToEnd` variable to force millisecond-perfect summation.
+This class converts the `keySpacing` gap list into absolute time buckets.
 
-### C. Chart Data Absolute Synchronization
+1. Create a loop from `1` to `duration`. Each loop is a `1000ms` window.
+2. Calculate physical keystrokes placed inside that window via absolute aggregation.
+3. **Raw to Net Mapping:** Calculate `correctRatio = correctChars / totalChars`. Multiply the bucket's keystrokes by `correctRatio` to get Net WPM.
+4. **The Trailing Bucket Rule:** If `elapsed >= duration`, define the length of the final bucket `duration - (second - 1)`. Scale the final WPM dynamically using this fraction so the chart does not crash or spike on the last node.
 
-The backend verifies the absolute flow of keys over time via the `chartData` array (mapping WPM over raw seconds).
+### STEP 4: The Anticheat Replica (`/anticheat/validator.ts` & `analyzer.ts`)
 
-- You must slice the dynamic `keySpacing` array into absolute `1000ms` chronological buckets.
-- **Raw Burst vs Net WPM:** Calculate raw keystrokes in that bucket, then multiply by `correctRatio` (where `correctRatio = correctChars / totalChars`) to find the Net WPM for that specific second.
-- **The Trailing Bucket Fix:** If the test duration is not a perfect whole number (e.g., 60.5s or stopped early), dynamically calculate the trailing bucket's duration (`isLastBucket ? totalTimeSec - elapsed : 1`) to correctly density-scale the WPM without spiking it infinitely.
+1. Create `zod` schemas. Define `CompletedEventSchema.strict()`. It must fail if any undefined keys exist.
+2. Ensure `charStats` length is exactly 4. Ensure `keySpacing.length` is exactly `charTotal - 1`.
+3. Inside `analyzer.ts`, take a generated payload. Strip its hash, recalculate it using `crypto.ts`, and compare them. If they match, isolate the `keySpacing` array, calculate its COV (StdDev/Mean), pass it to `calculateKogasa(cov)`, and verify that consistency is `< 80%`. Return a detailed programmatic report.
 
-### D. The Cryptographic Hash Forgery
+### STEP 5: The Forwarder (`/forwarder/client.ts`)
 
-The final payload requires a `hash` key to prevent parameter tampering.
+1. Create an asynchronous function `submitPayload(userId: string, payload: object)`.
+2. Construct HTTP headers masking as a legit browser.
+3. Route via `fetch()` to `POST https://api.monkeytype.com/results`. Return the textual response status and body natively to the controller.
 
-- Strip the `hash` key from the object.
-- Implement a deterministic key-sorter that sorts the JSON object keys alphabetically (mimicking the `object-hash` library).
-- Convert the sorted object to an unspaced JSON string and hash it using `crypto.createHash('sha1')`. Append this back as `hash`.
+### STEP 6: The Express API (`/backend/server.ts`)
 
----
+1. Start an Express server returning JSON.
+2. Expose `POST /api/generate` (Uses Step 2 & 3, returns JSON payload).
+3. Expose `POST /api/validate` (Uses Step 4 on a provided JSON payload, returns passing status + Kogasa score).
+4. Expose `POST /api/submit` (Uses Step 5 to forward the payload with `userID` to the real server, returns final status).
 
-## 3. Requirements for Component 2: The Anticheat Replica (`anticheat.js`)
+## 3. Implementation Steps: The Frontend Web UI
 
-This module evaluates payloads identical to the production Monkeytype backend.
+### STEP 7: The Web Platform (`/frontend`)
 
-### A. Strict Zod Schema Validation
+1. Create a clean, modern dashboard built in plain HTML/CSS/JS (no heavy front-end build tools needed, keep it pure and lightning fast).
+2. **Configuration Panel:** Input fields for `userID` (string), `Target WPM` (number), `Duration` (seconds), `Accuracy` (percentage), `Mode` (time/words).
+3. **Action Workflow (3-step pipeline):**
+   - **Button 1 [ Generate Payload ]:** Calls `/api/generate`. Displays the resulting JSON in a scrollable, syntax-highlighted code block.
+   - **Button 2 [ Test in Local Anticheat ]:** Calls `/api/validate`. Pops up a visual indicator (Green/Red) showing if the Zod schema matches and if the biological Kogasa score is plausible.
+   - **Button 3 [ Deploy to Target Server ]:** Calls `/api/submit` (using the injected userID). Displays the final `200 OK` or `400 Bad Request` received from the target server.
+4. **UX Requirements:** Provide clear visual feedback, loading spinners for API calls, and separate cleanly styled panels for inspecting the payload vs reading the anticheat logs.
 
-- Implement `zod`. Define `ResultBaseSchema` enforcing `.strict()`.
-- Reject any payload containing unauthorized properties (e.g., if `mode` is `"time"`, the payload must not contain `"quoteLength"` or `"words"` limits).
-- Verify array constraints: `keySpacing.length` must be exactly `charTotal - 1`. `keyDuration.length` must be exactly `charTotal`.
+## 4. Strict Operating Rules
 
-### B. Integrity Verification
+- **Do not simulate real-time typing events.** No Puppeteer, no Selenium. The Web UI purely configures the mathematical engine offline via the API.
+- **Do not ignore the floating-point fix.** JavaScript will mutate `reduce()` arrays by fractions. You must use explicit truncation (`Math.round(x*100)/100`) in the backend.
+- Ensure all modules export typed interfaces and maintain strict single-responsibility principles between frontend and backend.
 
-- Pluck off the payload's `hash`. Re-run the cryptographic SHA-1 dictionary stringification. If the server-generated hash does not identically match the forged hash, reject the request with a `400` error.
-
-### C. The Kogasa Consistency Formula
-
-The engine must map the biomechanical arrays. Calculate the Mean, Standard Deviation, and Coefficient of Variation (COV) for the `keySpacing` array.
-
-- Apply the **Kogasa Formula** (a Taylor series expansion simulating a biological bound):
-  `consistency = 100 * (1 - Math.tanh(cov + Math.pow(cov, 3)/3 + Math.pow(cov, 5)/5))`
-- If the consistency is too high (e.g., > 90%, representing a uniform robotic macro), flag as "Bot".
-- Humans generally land between 50% and 75% consistency.
-
----
-
-## 4. Requirements for Component 3: The Payload Forwarder (`forwarder.js`)
-
-Create a flexible networking module to relay the data.
-
-- Built using native `fetch` or `axios`.
-- Must accept the generated JSON from Component 1.
-- Apply custom HTTP headers to spoof a legitimate browser (User-Agent, Origin, Referer).
-- Execute a `POST` request to the targeted environment.
-- Capture the API response, securely log any backend diagnostic messages or Rejection Contexts (such as "Result data doesn't make sense") to a local `.txt` file, and gracefully handle rate-limits (HTTP 429).
-
----
-
-## Final Deliverable Format
-
-I expect a fully engineered Node.js codebase. Structure the response cleanly with multiple file blocks:
-
-1. `package.json` with required dependencies (`zod`, `crypto`, etc.).
-2. `src/generator.js` (Heavily documented with the math routines).
-3. `src/anticheat.js` (With explicit validation constraints).
-4. `src/forwarder.js` (The relay script).
-
-Do not skip any math. Do not approximate the constraints. Everything must be mathematically bounded and capable of fooling explicit backend validation. Good luck.
+Proceed by outputting the file contents exactly matching this systematic structure.
