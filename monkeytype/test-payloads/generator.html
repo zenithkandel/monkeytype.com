@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monkeytype Payload Generator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #e4e4e4;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      color: #e2b714;
+      font-size: 2.5rem;
+      text-shadow: 0 2px 10px rgba(226, 183, 20, 0.3);
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: rgba(30, 30, 50, 0.8);
+      border-radius: 12px;
+      padding: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .panel h2 {
+      color: #e2b714;
+      margin-bottom: 20px;
+      font-size: 1.3rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel h2 .icon {
+      font-size: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      color: #aaa;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      color: #fff;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #e2b714;
+      box-shadow: 0 0 15px rgba(226, 183, 20, 0.2);
+    }
+
+    input[type="range"] {
+      padding: 0;
+      height: 8px;
+      cursor: pointer;
+    }
+
+    .range-value {
+      display: inline-block;
+      background: #e2b714;
+      color: #1a1a2e;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      margin-left: 10px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .checkbox-item input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+    }
+
+    .radio-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .radio-item {
+      flex: 1;
+      position: relative;
+    }
+
+    .radio-item input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .radio-item label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      font-size: 0.95rem;
+      color: #ccc;
+    }
+
+    .radio-item input:checked + label {
+      border-color: #e2b714;
+      background: rgba(226, 183, 20, 0.15);
+      color: #e2b714;
+    }
+
+    .radio-item label:hover {
+      border-color: rgba(226, 183, 20, 0.5);
+    }
+
+    .invalid-options {
+      margin-top: 15px;
+      padding: 15px;
+      background: rgba(255, 50, 50, 0.1);
+      border: 1px solid rgba(255, 50, 50, 0.3);
+      border-radius: 8px;
+      display: none;
+    }
+
+    .invalid-options.show {
+      display: block;
+    }
+
+    .invalid-options h3 {
+      color: #ff6b6b;
+      margin-bottom: 12px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: 10px;
+    }
+
+    .btn-generate {
+      background: linear-gradient(135deg, #e2b714, #d4a012);
+      color: #1a1a2e;
+    }
+
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(226, 183, 20, 0.4);
+    }
+
+    .btn-copy {
+      background: rgba(100, 200, 100, 0.2);
+      border: 2px solid #64c864;
+      color: #64c864;
+    }
+
+    .btn-copy:hover {
+      background: rgba(100, 200, 100, 0.3);
+    }
+
+    .btn-copy.copied {
+      background: #64c864;
+      color: #1a1a2e;
+    }
+
+    .output-panel {
+      position: relative;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .output-status {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: bold;
+    }
+
+    .output-status.valid {
+      background: rgba(100, 200, 100, 0.2);
+      color: #64c864;
+      border: 1px solid #64c864;
+    }
+
+    .output-status.invalid {
+      background: rgba(255, 100, 100, 0.2);
+      color: #ff6b6b;
+      border: 1px solid #ff6b6b;
+    }
+
+    .json-output {
+      background: #0d0d1a;
+      border-radius: 8px;
+      padding: 15px;
+      max-height: 500px;
+      overflow: auto;
+      font-family: 'Consolas', 'Monaco', monospace;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .json-output::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .json-output::-webkit-scrollbar-track {
+      background: #1a1a2e;
+    }
+
+    .json-output::-webkit-scrollbar-thumb {
+      background: #e2b714;
+      border-radius: 4px;
+    }
+
+    .json-key { color: #9cdcfe; }
+    .json-string { color: #ce9178; }
+    .json-number { color: #b5cea8; }
+    .json-boolean { color: #569cd6; }
+    .json-null { color: #569cd6; }
+    .json-bracket { color: #ffd700; }
+
+    .info-box {
+      background: rgba(226, 183, 20, 0.1);
+      border: 1px solid rgba(226, 183, 20, 0.3);
+      border-radius: 8px;
+      padding: 12px 15px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      color: #ccc;
+    }
+
+    .info-box strong {
+      color: #e2b714;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .stat-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #e2b714;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🐵 Monkeytype Payload Generator</h1>
+    <p class="subtitle">Generate valid or invalid test result payloads for testing purposes</p>
+
+    <div class="main-grid">
+      <!-- Configuration Panel -->
+      <div class="panel">
+        <h2><span class="icon">⚙️</span> Configuration</h2>
+
+        <div class="info-box">
+          <strong>Note:</strong> This generator creates realistic payloads based on Monkeytype's actual validation rules. 
+          Valid payloads include natural human variance in timing data.
+        </div>
+
+        <!-- Valid/Invalid Selection -->
+        <div class="form-group">
+          <label>Payload Type</label>
+          <div class="radio-group">
+            <div class="radio-item">
+              <input type="radio" id="typeValid" name="payloadType" value="valid" checked>
+              <label for="typeValid">✅ Valid</label>
+            </div>
+            <div class="radio-item">
+              <input type="radio" id="typeInvalid" name="payloadType" value="invalid">
+              <label for="typeInvalid">❌ Invalid</label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Invalid Options (Hidden by default) -->
+        <div class="invalid-options" id="invalidOptions">
+          <h3>⚠️ Select Failure Type</h3>
+          <div class="form-group">
+            <select id="failureType">
+              <option value="bot_timing">465 - Bot Detected (Zero timing variance)</option>
+              <option value="missing_keys">464 - Missing Key Data</option>
+              <option value="hash_mismatch">461 - Hash Mismatch (Tampered)</option>
+              <option value="too_short">460 - Test Too Short</option>
+              <option value="duplicate">466 - Duplicate Result</option>
+              <option value="spacing_invalid">462 - Result Spacing Invalid</option>
+              <option value="data_mismatch">463 - Data Invalid (Stats mismatch)</option>
+              <option value="low_accuracy">400 - Accuracy Too Low (&lt;75%)</option>
+              <option value="missing_overlap">400 - Missing Key Overlap</option>
+              <option value="impossible_consistency">463 - Impossible Consistency</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- WPM Slider -->
+        <div class="form-group">
+          <label>Target WPM <span class="range-value" id="wpmValue">100</span></label>
+          <input type="range" id="wpm" min="30" max="300" value="100">
+        </div>
+
+        <!-- Mode Selection -->
+        <div class="row">
+          <div class="form-group">
+            <label>Mode</label>
+            <select id="mode">
+              <option value="time">Time</option>
+              <option value="words">Words</option>
+              <option value="quote">Quote</option>
+              <option value="zen">Zen</option>
+              <option value="custom">Custom</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Mode2 (Duration/Count)</label>
+            <select id="mode2">
+              <option value="15">15 seconds</option>
+              <option value="30">30 seconds</option>
+              <option value="60">60 seconds</option>
+              <option value="120">120 seconds</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Language & Difficulty -->
+        <div class="row">
+          <div class="form-group">
+            <label>Language</label>
+            <select id="language">
+              <option value="english">English</option>
+              <option value="english_1k">English 1k</option>
+              <option value="english_5k">English 5k</option>
+              <option value="spanish">Spanish</option>
+              <option value="french">French</option>
+              <option value="german">German</option>
+              <option value="code_javascript">Code (JavaScript)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Difficulty</label>
+            <select id="difficulty">
+              <option value="normal">Normal</option>
+              <option value="expert">Expert</option>
+              <option value="master">Master</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Toggles -->
+        <div class="form-group">
+          <label>Options</label>
+          <div class="checkbox-group">
+            <label class="checkbox-item">
+              <input type="checkbox" id="punctuation">
+              <span>Punctuation</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="numbers">
+              <span>Numbers</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="blindMode">
+              <span>Blind Mode</span>
+            </label>
+            <label class="checkbox-item">
+              <input type="checkbox" id="lazyMode">
+              <span>Lazy Mode</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Generate Button -->
+        <button class="btn-generate" onclick="generatePayload()">🚀 Generate Payload</button>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel output-panel">
+        <div class="output-header">
+          <h2><span class="icon">📄</span> Generated Payload</h2>
+          <span class="output-status valid" id="outputStatus">VALID</span>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-item">
+            <div class="stat-value" id="statWpm">-</div>
+            <div class="stat-label">WPM</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statAcc">-</div>
+            <div class="stat-label">Accuracy</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value" id="statConsistency">-</div>
+            <div class="stat-label">Consistency</div>
+          </div>
+        </div>
+
+        <div class="json-output" id="jsonOutput">
+          <span style="color: #888;">Click "Generate Payload" to create a payload...</span>
+        </div>
+
+        <button class="btn-copy" id="copyBtn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // DOM Elements
+    const wpmSlider = document.getElementById('wpm');
+    const wpmValue = document.getElementById('wpmValue');
+    const modeSelect = document.getElementById('mode');
+    const mode2Select = document.getElementById('mode2');
+    const invalidOptions = document.getElementById('invalidOptions');
+    const jsonOutput = document.getElementById('jsonOutput');
+    const outputStatus = document.getElementById('outputStatus');
+    const copyBtn = document.getElementById('copyBtn');
+
+    let currentPayload = null;
+
+    // Event Listeners
+    wpmSlider.addEventListener('input', () => {
+      wpmValue.textContent = wpmSlider.value;
+    });
+
+    document.querySelectorAll('input[name="payloadType"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        invalidOptions.classList.toggle('show', radio.value === 'invalid' && radio.checked);
+      });
+    });
+
+    modeSelect.addEventListener('change', updateMode2Options);
+
+    function updateMode2Options() {
+      const mode = modeSelect.value;
+      mode2Select.innerHTML = '';
+      
+      if (mode === 'time') {
+        [15, 30, 60, 120].forEach(t => {
+          mode2Select.innerHTML += `<option value="${t}">${t} seconds</option>`;
+        });
+      } else if (mode === 'words') {
+        [10, 25, 50, 100].forEach(w => {
+          mode2Select.innerHTML += `<option value="${w}">${w} words</option>`;
+        });
+      } else if (mode === 'quote') {
+        ['0', '1', '2', '3'].forEach((q, i) => {
+          const labels = ['Short', 'Medium', 'Long', 'Thicc'];
+          mode2Select.innerHTML += `<option value="${q}">${labels[i]}</option>`;
+        });
+      } else {
+        mode2Select.innerHTML += `<option value="${mode}">${mode}</option>`;
+      }
+    }
+
+    // Utility Functions
+    function randomInRange(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(randomInRange(min, max + 1));
+    }
+
+    function roundTo2(num) {
+      return Math.round(num * 100) / 100;
+    }
+
+    function generateNaturalArray(length, baseValue, variancePercent) {
+      const arr = [];
+      for (let i = 0; i < length; i++) {
+        const variance = baseValue * variancePercent;
+        arr.push(roundTo2(baseValue + randomInRange(-variance, variance)));
+      }
+      return arr;
+    }
+
+    function calculateStdDev(arr) {
+      const mean = arr.reduce((a, b) => a + b, 0) / arr.length;
+      const variance = arr.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / arr.length;
+      return Math.sqrt(variance);
+    }
+
+    function kogasa(cv) {
+      // Kogasa consistency formula approximation
+      return Math.max(0, Math.min(100, 100 * (1 - cv)));
+    }
+
+    function generateHash() {
+      const chars = 'abcdef0123456789';
+      let hash = '';
+      for (let i = 0; i < 40; i++) {
+        hash += chars[randomInt(0, chars.length - 1)];
+      }
+      return hash;
+    }
+
+    function generateUID() {
+      return 'user' + generateHash().substring(0, 20);
+    }
+
+    // Main Payload Generator
+    function generatePayload() {
+      const isValid = document.querySelector('input[name="payloadType"]:checked').value === 'valid';
+      const targetWpm = parseInt(wpmSlider.value);
+      const mode = modeSelect.value;
+      const mode2 = mode2Select.value;
+      const language = document.getElementById('language').value;
+      const difficulty = document.getElementById('difficulty').value;
+      const punctuation = document.getElementById('punctuation').checked;
+      const numbers = document.getElementById('numbers').checked;
+      const blindMode = document.getElementById('blindMode').checked;
+      const lazyMode = document.getElementById('lazyMode').checked;
+
+      let testDuration = mode === 'time' ? parseInt(mode2) : 15;
+      
+      // Calculate realistic values based on WPM
+      const charsPerMinute = targetWpm * 5;
+      const totalChars = Math.round((charsPerMinute / 60) * testDuration);
+      
+      // Generate realistic accuracy (higher WPM = slightly lower accuracy typically)
+      let accuracy = isValid ? 
+        roundTo2(Math.max(92, Math.min(99.5, 100 - (targetWpm / 50) + randomInRange(-2, 2)))) :
+        72.5; // For invalid low accuracy
+      
+      const incorrectChars = Math.round(totalChars * (100 - accuracy) / 100);
+      const extraChars = randomInt(0, 3);
+      const correctChars = totalChars - incorrectChars - extraChars;
+      
+      // Raw WPM is slightly higher than adjusted WPM
+      const rawWpm = roundTo2(targetWpm + randomInRange(2, 6));
+      
+      // Consistency based on WPM (higher WPM = higher consistency for skilled typists)
+      const baseConsistency = Math.min(90, 60 + (targetWpm / 5));
+      const consistency = roundTo2(baseConsistency + randomInRange(-5, 5));
+      const keyConsistency = roundTo2(consistency - randomInRange(2, 6));
+      const wpmConsistency = roundTo2(consistency - randomInRange(1, 4));
+      
+      // Key spacing: ~60ms at 200WPM, ~300ms at 40WPM
+      const avgKeySpacing = Math.round(12000 / targetWpm);
+      const keyCount = Math.round(totalChars * 0.7); // Approximate keystrokes
+      
+      // Generate timing arrays with natural variance
+      let keySpacing, keyDuration, keyOverlap;
+      
+      if (isValid) {
+        keySpacing = generateNaturalArray(keyCount, avgKeySpacing, 0.35);
+        keyDuration = generateNaturalArray(keyCount, avgKeySpacing * 0.5, 0.3);
+        keyOverlap = roundTo2(testDuration * randomInRange(50, 120));
+      } else {
+        // Handle invalid cases
+        const failureType = document.getElementById('failureType').value;
+        switch (failureType) {
+          case 'bot_timing':
+            keySpacing = Array(keyCount).fill(avgKeySpacing);
+            keyDuration = Array(keyCount).fill(avgKeySpacing * 0.5);
+            keyOverlap = 0;
+            break;
+          case 'missing_keys':
+            keySpacing = [];
+            keyDuration = [];
+            keyOverlap = 0;
+            break;
+          case 'missing_overlap':
+            keySpacing = generateNaturalArray(keyCount, avgKeySpacing, 0.35);
+            keyDuration = generateNaturalArray(keyCount, avgKeySpacing * 0.5, 0.3);
+            keyOverlap = undefined;
+            break;
+          default:
+            keySpacing = generateNaturalArray(keyCount, avgKeySpacing, 0.35);
+            keyDuration = generateNaturalArray(keyCount, avgKeySpacing * 0.5, 0.3);
+            keyOverlap = roundTo2(testDuration * randomInRange(50, 120));
+        }
+      }
+      
+      // Generate chart data
+      const chartLength = Math.min(testDuration, 122);
+      const wpmChart = [];
+      const burstChart = [];
+      const errChart = [];
+      
+      for (let i = 0; i < chartLength; i++) {
+        const wpmVariance = isValid ? randomInRange(-5, 5) : 0;
+        wpmChart.push(Math.round(targetWpm + wpmVariance));
+        burstChart.push(Math.round(targetWpm * 1.08 + wpmVariance));
+        errChart.push(isValid ? randomInt(0, 2) : 0);
+      }
+      
+      // Build the payload
+      let payload = {
+        wpm: targetWpm,
+        rawWpm: rawWpm,
+        acc: accuracy,
+        consistency: consistency,
+        keyConsistency: keyConsistency,
+        wpmConsistency: wpmConsistency,
+        charStats: [correctChars, incorrectChars, extraChars, 0],
+        charTotal: totalChars,
+        mode: mode,
+        mode2: mode2,
+        language: language,
+        difficulty: difficulty,
+        punctuation: punctuation,
+        numbers: numbers,
+        blindMode: blindMode,
+        lazyMode: lazyMode,
+        funbox: [],
+        timestamp: Date.now(),
+        testDuration: testDuration,
+        afkDuration: 0,
+        startToFirstKey: roundTo2(randomInRange(80, 350)),
+        lastKeyToEnd: roundTo2(randomInRange(40, 180)),
+        keySpacing: keySpacing,
+        keyDuration: keyDuration,
+        restartCount: randomInt(0, 3),
+        incompleteTests: [],
+        incompleteTestSeconds: 0,
+        chartData: {
+          wpm: wpmChart,
+          burst: burstChart,
+          err: errChart
+        },
+        tags: [],
+        bailedOut: false,
+        stopOnLetter: false,
+        hash: generateHash(),
+        uid: generateUID()
+      };
+      
+      // Add keyOverlap only if defined
+      if (keyOverlap !== undefined) {
+        payload.keyOverlap = keyOverlap;
+      }
+      
+      // Apply invalid modifications
+      if (!isValid) {
+        const failureType = document.getElementById('failureType').value;
+        payload._failureType = failureType;
+        
+        switch (failureType) {
+          case 'bot_timing':
+            payload._comment = "FAIL: Zero key variance (bot signature)";
+            payload.consistency = 100;
+            payload.keyConsistency = 100;
+            payload.wpmConsistency = 100;
+            payload.acc = 100;
+            break;
+          case 'missing_keys':
+            payload._comment = "FAIL: Missing key data for high WPM";
+            break;
+          case 'hash_mismatch':
+            payload._comment = "FAIL: Hash mismatch (tampered data)";
+            payload.hash = "TAMPERED_INVALID_HASH_" + generateHash().substring(0, 20);
+            break;
+          case 'too_short':
+            payload._comment = "FAIL: Test too short (under 15 seconds)";
+            payload.testDuration = 10;
+            payload.mode2 = "10";
+            payload.chartData.wpm = wpmChart.slice(0, 10);
+            payload.chartData.burst = burstChart.slice(0, 10);
+            payload.chartData.err = errChart.slice(0, 10);
+            break;
+          case 'duplicate':
+            payload._comment = "FAIL: Duplicate result hash";
+            payload.hash = "DUPLICATE_HASH_ALREADY_SUBMITTED_" + generateHash().substring(0, 10);
+            break;
+          case 'spacing_invalid':
+            payload._comment = "FAIL: Result spacing invalid (too quick)";
+            payload.timestamp = Date.now() - 5000; // 5 seconds ago
+            break;
+          case 'data_mismatch':
+            payload._comment = "FAIL: Data invalid (charStats don't match WPM)";
+            payload.charStats = [50, 1, 0, 0]; // Way too few chars for claimed WPM
+            payload.charTotal = 51;
+            break;
+          case 'low_accuracy':
+            payload._comment = "FAIL: Accuracy too low (below 75%)";
+            payload.acc = 72.5;
+            payload.charStats = [Math.round(totalChars * 0.72), Math.round(totalChars * 0.2), Math.round(totalChars * 0.08), 0];
+            break;
+          case 'missing_overlap':
+            payload._comment = "FAIL: Missing keyOverlap field";
+            break;
+          case 'impossible_consistency':
+            payload._comment = "FAIL: Impossible consistency at high speed";
+            payload.wpm = 200;
+            payload.rawWpm = 201;
+            payload.acc = 99.8;
+            payload.consistency = 99.5;
+            payload.keyConsistency = 99.2;
+            payload.wpmConsistency = 99.4;
+            payload.keySpacing = Array(keyCount).fill(60).map((v, i) => v + (i % 2));
+            payload.keyDuration = Array(keyCount).fill(30).map((v, i) => v + (i % 2));
+            break;
+        }
+      }
+      
+      currentPayload = payload;
+      displayPayload(payload, isValid);
+    }
+
+    function displayPayload(payload, isValid) {
+      // Update status badge
+      outputStatus.textContent = isValid ? 'VALID' : 'INVALID';
+      outputStatus.className = 'output-status ' + (isValid ? 'valid' : 'invalid');
+      
+      // Update stats
+      document.getElementById('statWpm').textContent = payload.wpm;
+      document.getElementById('statAcc').textContent = payload.acc + '%';
+      document.getElementById('statConsistency').textContent = payload.consistency + '%';
+      
+      // Format JSON with syntax highlighting
+      const jsonString = JSON.stringify(payload, null, 2);
+      const highlighted = jsonString
+        .replace(/("(?:[^"\\]|\\.)*")(\s*:)/g, '<span class="json-key">$1</span>$2')
+        .replace(/:\s*("(?:[^"\\]|\\.)*")/g, ': <span class="json-string">$1</span>')
+        .replace(/:\s*(\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+        .replace(/:\s*(true|false)/g, ': <span class="json-boolean">$1</span>')
+        .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>')
+        .replace(/[\[\]{}]/g, '<span class="json-bracket">$&</span>');
+      
+      jsonOutput.innerHTML = '<pre>' + highlighted + '</pre>';
+      copyBtn.textContent = '📋 Copy to Clipboard';
+      copyBtn.classList.remove('copied');
+    }
+
+    function copyToClipboard() {
+      if (!currentPayload) return;
+      
+      const jsonString = JSON.stringify(currentPayload, null, 2);
+      navigator.clipboard.writeText(jsonString).then(() => {
+        copyBtn.textContent = '✅ Copied!';
+        copyBtn.classList.add('copied');
+        setTimeout(() => {
+          copyBtn.textContent = '📋 Copy to Clipboard';
+          copyBtn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Initialize
+    updateMode2Options();
+  </script>
+</body>
+</html>
