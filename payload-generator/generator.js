@@ -113,8 +113,20 @@ class HumanTypingGenerator {
         // Fatigue curve - slight slowdown towards end
         const fatigueStartRatio = 0.6; // Fatigue starts at 60% through test
 
+        // Autoregressive state for natural correlated speed changes (rhythm)
+        let arState = 0;
+        const rho = 0.65; // AR(1) autocorrelation coefficient
+
         for (let i = 0; i < charCount - 1; i++) {
             const progress = i / (charCount - 1);
+
+            // Update AR(1) state: memory of previous speed + some random noise
+            const noise = this.normalRandom() * Math.sqrt(1 - rho * rho);
+            arState = rho * arState + noise;
+
+            // A multiplier that wanders between ~0.7 to 1.3
+            const rhythmMultiplier = 1.0 + (arState * 0.25);
+            const currentSpeedTarget = Math.max(targetMeanSpacing * 0.5, targetMeanSpacing * rhythmMultiplier);
 
             // Fatigue factor (1.0 to 1.15 - slight increase in timing)
             let fatigueFactor = 1.0;
@@ -127,20 +139,20 @@ class HumanTypingGenerator {
 
             // Word boundary - longer pause
             if (spacePositions.has(i)) {
-                // Word boundary: 20% chance of hesitation, otherwise thinking pause
+                // Word boundary: 15% chance of hesitation, otherwise thinking pause
                 if (Math.random() < 0.15) {
                     spacing = this.logNormal(Math.log(300), 0.4) * fatigueFactor;
-                    spacing = Math.max(200, Math.min(600, spacing));
+                    spacing = Math.max(200, Math.min(800, spacing));
                 } else {
                     spacing = this.logNormal(Math.log(180), 0.35) * fatigueFactor;
-                    spacing = Math.max(100, Math.min(350, spacing));
+                    spacing = Math.max(100, Math.min(400, spacing));
                 }
                 inBurst = false;
             }
             // Burst typing (fast sequences)
             else if (inBurst && burstCounter < burstLength) {
-                spacing = this.gamma(8, targetMeanSpacing / 12) * fatigueFactor;
-                spacing = Math.max(35, Math.min(90, spacing));
+                spacing = this.gamma(8, (targetMeanSpacing * 0.7) / 8) * fatigueFactor * rhythmMultiplier;
+                spacing = Math.max(30, Math.min(110, spacing));
                 burstCounter++;
                 if (burstCounter >= burstLength) {
                     inBurst = false;
@@ -148,31 +160,33 @@ class HumanTypingGenerator {
             }
             // Normal typing with chance to start burst
             else {
-                // 25% chance to start a burst
-                if (Math.random() < 0.25) {
+                // Chance to start burst is dependent on rhythm state (to cluster bursts naturally)
+                const burstChance = arState > 0 ? 0.35 : 0.15;
+                if (Math.random() < burstChance) {
                     inBurst = true;
-                    burstLength = Math.floor(Math.random() * 4) + 2; // 2-5 chars
+                    // Lower bursts lengths so we don't violate burstRatio > 50%
+                    burstLength = Math.floor(Math.random() * 3) + 2; // 2-4 chars
                     burstCounter = 0;
-                    spacing = this.gamma(8, targetMeanSpacing / 12) * fatigueFactor;
-                    spacing = Math.max(35, Math.min(90, spacing));
+                    spacing = this.gamma(8, (targetMeanSpacing * 0.7) / 8) * fatigueFactor * rhythmMultiplier;
+                    spacing = Math.max(30, Math.min(110, spacing));
                     burstCounter++;
                 }
                 // Regular typing - log-normal distribution
                 else {
-                    const logMu = Math.log(targetMeanSpacing);
-                    const logSigma = 0.4 + Math.random() * 0.2; // Variable sigma for natural variation
+                    const logMu = Math.log(currentSpeedTarget);
+                    const logSigma = 0.3 + Math.random() * 0.15; // Variable sigma for natural variation
                     spacing = this.logNormal(logMu, logSigma) * fatigueFactor;
 
-                    // Occasional thinking pause (3% chance)
-                    if (Math.random() < 0.03) {
+                    // Occasional thinking pause (1.5% chance)
+                    if (Math.random() < 0.015) {
                         spacing = this.logNormal(Math.log(250), 0.3);
-                        spacing = Math.max(150, Math.min(450, spacing));
+                        spacing = Math.max(150, Math.min(400, spacing));
                     }
                 }
             }
 
             // Clamp to reasonable bounds
-            spacing = Math.max(30, Math.min(700, spacing));
+            spacing = Math.max(25, Math.min(800, spacing));
 
             // Round to 1-2 decimal places (like real data)
             spacing = Math.round(spacing * 10) / 10;

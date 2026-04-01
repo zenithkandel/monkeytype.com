@@ -536,6 +536,58 @@ class AnticheatAnalyzer {
     }
 
     /**
+     * Check 9b: Mathematical Integrity
+     */
+    checkMathematicalIntegrity(result) {
+        if (!result.wpm || !result.charStats || !result.charTotal || !result.testDuration) {
+            return { pass: true, score: 50, message: 'Insufficient data for strict math validation' };
+        }
+
+        const issues = [];
+        let score = 100;
+
+        // 1. Array lengths validation
+        if (Array.isArray(result.keySpacing) && Array.isArray(result.keyDuration)) {
+            if (result.keyDuration.length < result.charTotal) {
+                issues.push('keyDuration length too short for charTotal');
+                score -= 40;
+            }
+            if (result.keySpacing.length !== result.keyDuration.length - 1) {
+                issues.push('keySpacing length not exactly 1 less than keyDuration');
+                score -= 30;
+            }
+        }
+
+        // 2. Strict WPM check
+        const derivedWpm = Math.round((result.charStats[0] / 5) * (60 / result.testDuration) * 100) / 100;
+        const expectedRawSum = result.charStats[0] + result.charStats[1] + result.charStats[2];
+        const derivedRawWpm = Math.round((expectedRawSum / 5) * (60 / result.testDuration) * 100) / 100;
+
+        if (Math.abs(result.wpm - derivedWpm) > 0.05) {
+            issues.push(`WPM ${result.wpm} varies from computed WPM ${derivedWpm}`);
+            score -= 50;
+        }
+
+        if (result.rawWpm && Math.abs(result.rawWpm - derivedRawWpm) > 0.05) {
+            issues.push(`Raw WPM ${result.rawWpm} varies from computed ${derivedRawWpm}`);
+            score -= 50;
+        }
+
+        // 3. Char stats sum validation
+        const charSum = result.charStats[0] + result.charStats[1] + result.charStats[2] + result.charStats[3];
+        if (result.charTotal !== charSum && result.charTotal !== expectedRawSum) {
+            issues.push(`charTotal ${result.charTotal} does not strictly match charStats array values`);
+            score -= 30;
+        }
+
+        return {
+            pass: issues.length === 0,
+            score: Math.max(0, score),
+            message: issues.length > 0 ? issues.join('; ') : 'Mathematical integrity verified flawlessly'
+        };
+    }
+
+    /**
      * Check 10: Chart Data Consistency
      */
     checkChartData(result) {
@@ -647,6 +699,7 @@ class AnticheatAnalyzer {
             valueBounds: this.checkValueBounds(result),
             chartData: this.checkChartData(result),
             autocorrelation: this.checkAutocorrelation(result.keySpacing),
+            mathIntegrity: this.checkMathematicalIntegrity(result)
         };
 
         // Calculate weighted score
