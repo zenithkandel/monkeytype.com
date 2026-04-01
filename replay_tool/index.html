@@ -59,6 +59,9 @@ Supports formats:
         <div class="form-group full-width">
           <label for="token">Bearer Token (JWT) *</label>
           <textarea id="token" required placeholder="eyJhbGciOi..."></textarea>
+          <label class="remember-token">
+            <input type="checkbox" id="rememberToken" /> Remember Token
+          </label>
         </div>
 
         <h3>Payload (Result Object)</h3>
@@ -189,11 +192,11 @@ Supports formats:
           </div>
           <div class="form-group">
             <label>Last Key To End</label
-            ><input type="number" id="lastKeyToEnd" required />
+            ><input type="number" step="0.01" id="lastKeyToEnd" required />
           </div>
           <div class="form-group">
             <label>Start To First Key</label
-            ><input type="number" id="startToFirstKey" required />
+            ><input type="number" step="0.01" id="startToFirstKey" required />
           </div>
 
           <div class="form-group">

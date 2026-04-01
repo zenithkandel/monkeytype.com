@@ -226,10 +226,26 @@ class HumanTypingGenerator {
             // Clamp to profile bounds with some overshoot allowed
             duration = Math.max(profile.min * 0.7, Math.min(profile.max * 1.3, duration));
 
-            // Add high-precision decimals (like real browser timestamps)
-            // Real data has values like 158.20000000298023
-            const precision = Math.random() * 0.0001;
-            duration = duration + precision;
+            // Add browser-like floating point precision artifacts
+            // Real data has values like 158.20000000298023 or 47.3999999910593
+            // This mimics JavaScript's floating point representation quirks
+            const fpArtifact = (Math.random() - 0.5) * 0.0001;
+            duration = duration + fpArtifact;
+            
+            // Apply a small random offset that creates the typical browser timestamp patterns
+            if (Math.random() > 0.3) {
+                // About 70% have the typical artifact pattern
+                const artifactType = Math.floor(Math.random() * 4);
+                switch (artifactType) {
+                    case 0: duration = Math.round(duration * 100) / 100 + 0.00000000298023; break;
+                    case 1: duration = Math.round(duration * 100) / 100 - 0.0000000089407; break;
+                    case 2: duration = Math.round(duration * 100) / 100 + 0.00000000596046; break;
+                    case 3: duration = Math.round(duration * 100) / 100 - 0.00000000298023; break;
+                }
+            } else {
+                // 30% have clean values like 109.5 or 81
+                duration = Math.round(duration * 10) / 10;
+            }
 
             durations.push(duration);
         }
@@ -427,8 +443,9 @@ class HumanTypingGenerator {
         const remainingTime = (testDuration * 1000) - totalSpacingTime;
 
         // startToFirstKey and lastKeyToEnd should add up with spacing to equal duration
-        const startToFirstKey = Math.max(0, Math.round(remainingTime * 0.3 * 10) / 10);
-        const lastKeyToEnd = Math.max(0, Math.round(remainingTime * 0.7 * 10) / 10);
+        // These are decimals rounded to 2 decimal places (like real data: 275.38, 124.8)
+        const startToFirstKey = Math.max(0, Math.round(remainingTime * 0.3 * 100) / 100);
+        const lastKeyToEnd = Math.max(0, Math.round(remainingTime * 0.7 * 100) / 100);
 
         // Generate chart data
         const chartWpm = this.generateChartWpm(targetWpm, testDuration);
@@ -490,7 +507,7 @@ class HumanTypingGenerator {
                 burst: chartBurst,
                 err: chartErr
             },
-            testDuration: Math.round(testDuration * 100) / 100,
+            testDuration: testDuration,
             afkDuration: 0,
             stopOnLetter: false
         };
