@@ -92,16 +92,7 @@ const payload = {
         timestamp: Date.now(),
         language: "english",
         restartCount: 2,
-        incompleteTests: [
-            {
-                "acc": 85.56,
-                "seconds": 2.23
-            },
-            {
-                "acc": 98.42,
-                "seconds": 5.58
-            }
-        ],
+        incompleteTests: [],
         incompleteTestSeconds: 7.81,
         difficulty: "normal",
         blindMode: false,
