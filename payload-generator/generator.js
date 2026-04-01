@@ -148,34 +148,33 @@ class HumanTypingGenerator {
         // Instead of pure random shuffle, we do a random shuffle and then a smoothing sort
         this.shuffle(gaps);
 
-        // Iterative bounded scaling to hit EXACT targetSum
+        // Iterative bounded scaling to hit EXACT targetSum while preserving bucket bounds!
         let currentSum = gaps.reduce((a, b) => a + b, 0);
-        const iterations = 50;
-
-        for (let iter = 0; iter < iterations; iter++) {
-            currentSum = gaps.reduce((a, b) => a + b, 0);
-            const diff = targetSum - currentSum;
-            if (Math.abs(diff) < 0.1) break;
-
-            const scale = targetSum / currentSum;
+        let diff = targetSum - currentSum;
+        let attempts = 0;
+        
+        while (Math.abs(diff) > 0.1 && attempts < 5000) {
+            const add = diff > 0;
+            const step = diff / gaps.length;
+            
             for (let i = 0; i < gaps.length; i++) {
-                let v = gaps[i] * scale;
-                // Preserve the biological minimum
-                v = Math.max(20, v);
-                gaps[i] = v;
-            }
-        }
-
-        // Re-calculate to absorb floating point rounding exactness
-        currentSum = gaps.reduce((a, b) => a + b, 0);
-        const finalFix = targetSum - currentSum;
-        if (Math.abs(finalFix) > 0) {
-            for (let i = 0; i < gaps.length; i++) {
-                if (gaps[i] + finalFix > 20) {
-                    gaps[i] += finalFix;
-                    break;
+                const oldVal = gaps[i];
+                let newVal = oldVal + (Math.abs(step) * (add ? 1 : -1) * (0.8 + Math.random() * 0.4));
+                
+                if (!add) {
+                    if (oldVal >= 300) newVal = Math.max(300.1, newVal); 
+                    else if (oldVal >= 80) newVal = Math.max(80.1, newVal); 
+                    else newVal = Math.max(20.1, newVal); 
+                } else {
+                    if (oldVal < 80) newVal = Math.min(79.9, newVal);
+                    else if (oldVal < 300) newVal = Math.min(299.9, newVal);
                 }
+                
+                diff -= (newVal - oldVal);
+                gaps[i] = newVal;
+                if (Math.abs(diff) <= 0.1) break;
             }
+            attempts++;
         }
 
         // Return rounded to 1 decimal place. We must handle the rounding error though!
