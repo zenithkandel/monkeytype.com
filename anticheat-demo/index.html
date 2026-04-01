@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MonkeyType Anticheat Analyzer</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        min-height: 100vh;
+        color: #e0e0e0;
+        padding: 20px;
+      }
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+      h1 {
+        text-align: center;
+        color: #ff6b6b;
+        margin-bottom: 10px;
+        font-size: 2rem;
+      }
+      .subtitle {
+        text-align: center;
+        color: #888;
+        margin-bottom: 30px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 20px;
+      }
+      .panel {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .panel h2 {
+        color: #ff6b6b;
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 10px;
+      }
+      .input-section {
+        margin-bottom: 20px;
+      }
+      textarea {
+        width: 100%;
+        height: 200px;
+        padding: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        background: rgba(0, 0, 0, 0.4);
+        color: #fff;
+        font-family: "Consolas", monospace;
+        font-size: 0.85rem;
+        resize: vertical;
+      }
+      textarea:focus {
+        outline: none;
+        border-color: #ff6b6b;
+      }
+      button {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a5a 100%);
+        color: #fff;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        margin-right: 10px;
+      }
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        box-shadow: none;
+      }
+
+      /* Verdict Section */
+      .verdict-box {
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .verdict-pass {
+        background: linear-gradient(
+          135deg,
+          rgba(76, 175, 80, 0.2) 0%,
+          rgba(76, 175, 80, 0.1) 100%
+        );
+        border: 2px solid #4caf50;
+      }
+      .verdict-fail {
+        background: linear-gradient(
+          135deg,
+          rgba(244, 67, 54, 0.2) 0%,
+          rgba(244, 67, 54, 0.1) 100%
+        );
+        border: 2px solid #f44336;
+      }
+      .verdict-suspicious {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 193, 7, 0.2) 0%,
+          rgba(255, 193, 7, 0.1) 100%
+        );
+        border: 2px solid #ffc107;
+      }
+      .verdict-title {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+      .verdict-pass .verdict-title {
+        color: #4caf50;
+      }
+      .verdict-fail .verdict-title {
+        color: #f44336;
+      }
+      .verdict-suspicious .verdict-title {
+        color: #ffc107;
+      }
+      .verdict-score {
+        font-size: 3rem;
+        font-weight: bold;
+        margin: 10px 0;
+      }
+
+      /* Check Results */
+      .checks-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .check-item {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .check-name {
+        font-size: 0.85rem;
+        color: #aaa;
+      }
+      .check-status {
+        font-weight: bold;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+      }
+      .check-pass {
+        background: rgba(76, 175, 80, 0.2);
+        color: #4caf50;
+      }
+      .check-fail {
+        background: rgba(244, 67, 54, 0.2);
+        color: #f44336;
+      }
+      .check-warn {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+      }
+
+      /* Stats Display */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin-bottom: 15px;
+      }
+      .stat-box {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 12px;
+        border-radius: 8px;
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: #ff6b6b;
+      }
+      .stat-label {
+        font-size: 0.75rem;
+        color: #888;
+        margin-top: 4px;
+      }
+      .stat-expected {
+        font-size: 0.7rem;
+        color: #666;
+      }
+
+      /* Charts */
+      .chart-container {
+        height: 180px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 8px;
+        margin: 10px 0;
+        position: relative;
+      }
+      canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+
+      /* Detailed Analysis */
+      .analysis-section {
+        margin-top: 15px;
+      }
+      .analysis-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 12px;
+        border-radius: 6px;
+        margin-bottom: 10px;
+      }
+      .analysis-title {
+        font-weight: bold;
+        color: #ff6b6b;
+        margin-bottom: 8px;
+      }
+      .analysis-detail {
+        font-size: 0.85rem;
+        color: #aaa;
+        line-height: 1.6;
+      }
+      .analysis-detail code {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 2px 6px;
+        border-radius: 3px;
+        color: #fff;
+      }
+
+      /* Flags */
+      .flags-section {
+        margin-top: 15px;
+      }
+      .flag-item {
+        display: flex;
+        align-items: center;
+        padding: 8px 12px;
+        background: rgba(244, 67, 54, 0.1);
+        border-left: 3px solid #f44336;
+        border-radius: 0 6px 6px 0;
+        margin-bottom: 8px;
+      }
+      .flag-item.warning {
+        background: rgba(255, 193, 7, 0.1);
+        border-color: #ffc107;
+      }
+      .flag-icon {
+        margin-right: 10px;
+        font-size: 1.2rem;
+      }
+      .flag-text {
+        font-size: 0.85rem;
+      }
+
+      /* Right panel layout */
+      .right-panel {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .charts-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+      }
+
+      @media (max-width: 1200px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .charts-row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      /* Sample buttons */
+      .sample-buttons {
+        margin-bottom: 15px;
+      }
+      .sample-btn {
+        padding: 8px 16px;
+        font-size: 0.85rem;
+        margin: 5px;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🛡️ MonkeyType Anticheat Analyzer</h1>
+      <p class="subtitle">
+        Analyze typing test payloads to detect synthetic/bot-generated data
+      </p>
+
+      <div class="grid">
+        <div class="left-panel">
+          <div class="panel">
+            <h2>📥 Input Payload</h2>
+            <div class="sample-buttons">
+              <button
+                class="btn-secondary sample-btn"
+                onclick="loadSampleHuman()"
+              >
+                Load Human Sample
+              </button>
+              <button
+                class="btn-secondary sample-btn"
+                onclick="loadSampleBot()"
+              >
+                Load Bot Sample
+              </button>
+            </div>
+            <div class="input-section">
+              <textarea
+                id="payloadInput"
+                placeholder='Paste your MonkeyType result JSON here...
+
+Example:
+{
+  "result": {
+    "wpm": 90,
+    "keySpacing": [...],
+    "keyDuration": [...],
+    ...
+  }
+}'
+              ></textarea>
+            </div>
+            <button onclick="analyzePayload()">🔍 Analyze Payload</button>
+            <button class="btn-secondary" onclick="clearAll()">Clear</button>
+          </div>
+
+          <div class="panel" style="margin-top: 20px" id="verdictPanel">
+            <h2>⚖️ Verdict</h2>
+            <div class="verdict-box verdict-suspicious" id="verdictBox">
+              <div class="verdict-title" id="verdictTitle">
+                AWAITING ANALYSIS
+              </div>
+              <div class="verdict-score" id="verdictScore">--</div>
+              <div id="verdictDesc">Paste a payload and click Analyze</div>
+            </div>
+          </div>
+
+          <div class="panel" style="margin-top: 20px" id="checksPanel">
+            <h2>✅ Validation Checks</h2>
+            <div class="checks-grid" id="checksGrid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="panel">
+            <h2>📊 Payload Statistics</h2>
+            <div class="stats-grid" id="statsGrid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>📈 Distribution Analysis</h2>
+            <div class="charts-row">
+              <div>
+                <h3 style="font-size: 0.9rem; color: #888; margin-bottom: 5px">
+                  Key Spacing Distribution
+                </h3>
+                <div class="chart-container">
+                  <canvas id="spacingHistogram"></canvas>
+                </div>
+              </div>
+              <div>
+                <h3 style="font-size: 0.9rem; color: #888; margin-bottom: 5px">
+                  Key Duration Distribution
+                </h3>
+                <div class="chart-container">
+                  <canvas id="durationHistogram"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="charts-row">
+              <div>
+                <h3 style="font-size: 0.9rem; color: #888; margin-bottom: 5px">
+                  WPM Over Time
+                </h3>
+                <div class="chart-container">
+                  <canvas id="wpmChart"></canvas>
+                </div>
+              </div>
+              <div>
+                <h3 style="font-size: 0.9rem; color: #888; margin-bottom: 5px">
+                  Key Spacing Timeline
+                </h3>
+                <div class="chart-container">
+                  <canvas id="spacingTimeline"></canvas>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>🚩 Detected Flags</h2>
+            <div class="flags-section" id="flagsSection">
+              <p style="color: #666; font-size: 0.9rem">
+                No flags detected yet
+              </p>
+            </div>
+          </div>
+
+          <div class="panel">
+            <h2>🔬 Detailed Analysis</h2>
+            <div class="analysis-section" id="analysisSection">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="anticheat.js"></script>
+  </body>
+</html>
