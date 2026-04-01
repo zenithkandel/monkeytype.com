@@ -21,7 +21,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
         'Accept: application/json',
         'Origin: https://monkeytype.com',
-        'Referer: https://monkeytype.com/'
+        'Referer: https://monkeytype.com/',
+        'X-Client-Version: 26.14.0'
     ];
 
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
