@@ -708,9 +708,14 @@ function downloadPayload() {
 }
 
 // Initialize on load
-document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('mode')) {
-        // Initial generation (only in standalone mode)
-        setTimeout(generatePayload, 100);
-    }
-});
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (document.getElementById('mode')) {
+            // Initial generation (only in standalone mode)
+            setTimeout(generatePayload, 100);
+        }
+    });
+}
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { HumanTypingGenerator };
+}
