@@ -37,14 +37,26 @@ currentTime += startToFirstKey; // time of first keypress
 let timestamps = [currentTime];
 keyDuration.push(Math.round(meanKeySpan * 0.75));
 
+let keysSinceSpace = 0;
+let nextSpaceAt = Math.floor(Math.random() * 5) + 3; // 3 to 7 chars
+
 while (true) {
-    // Generate next key time
+    keysSinceSpace++;
     let r1 = Math.random(), r2 = Math.random(), r3 = Math.random();
     let randDist = (r1 + r2 + r3 - 1.5) * 2; // -3 to +3
+    
+    // Simulating bursts
+    let isSpace = (keysSinceSpace >= nextSpaceAt);
+    let baseTime = isSpace ? meanKeySpan * 2.5 : meanKeySpan * 0.7;
+    
+    if (isSpace) {
+        keysSinceSpace = 0;
+        nextSpaceAt = Math.floor(Math.random() * 6) + 3; // 3 to 8
+    }
 
-    let span = meanKeySpan + (randDist * 8);
-    if (span < 20) span = 20; // Human limit
-
+    let span = baseTime + (randDist * (isSpace ? 40 : 15)); 
+    if (span < 20) span = 20 + Math.random() * 10; // Human limit
+    
     if (currentTime + span > testDuration * 1000) {
         break; // Test ends strictly at 15s
     }
@@ -79,28 +91,11 @@ for (let sec = 1; sec <= testDuration; sec++) {
 }
 
 // Consistency
-let keyConsCov = stdDev(keySpacing) / mean(keySpacing);
+let keyConsArray = keySpacing.slice(0, keySpacing.length - 1);
+let keyConsCov = stdDev(keyConsArray) / mean(keyConsArray);       
 let keyConsistency = roundTo2(kogasa(keyConsCov));
 
-let wpmConsCov = stdDev(wpmData) / mean(wpmData);
-let wpmConsistency = roundTo2(kogasa(wpmConsCov));
-let consistency = wpmConsistency;
-
-const payload = {
-    result: {
-        wpm: wpm,
-        rawWpm: wpm,
-        charStats: [charCount, 0, 0, 0],
-        charTotal: charCount,
-        acc: 100,
-        mode: "time",
-        mode2: String(testDuration),
-        punctuation: false,
-        numbers: false,
-        lazyMode: false,
-        timestamp: Date.now(),
-        language: "english",
-        restartCount: 2,
+let wpmConsCov = stdDev(burstData) / mean(burstData);
         incompleteTests: [],
         incompleteTestSeconds: 0,
         difficulty: "normal",
