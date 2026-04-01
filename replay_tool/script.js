@@ -111,6 +111,15 @@ document.addEventListener('DOMContentLoaded', () => {
             payload.funbox = JSON.parse(document.getElementById('funbox').value || '[]');
             payload.chartData = JSON.parse(document.getElementById('chartData').value || '{}');
 
+            // Handle Hash Generation
+            const autoHash = document.getElementById('autoHash');
+            if (autoHash && autoHash.checked) {
+                delete payload.hash; // Must remove hash field before generating hash
+                const generatedHash = objectHash(payload);
+                payload.hash = generatedHash;
+                document.getElementById('hash').value = generatedHash; // Update UI
+            }
+
             const token = document.getElementById('token').value.trim();
 
             const requestBody = {
