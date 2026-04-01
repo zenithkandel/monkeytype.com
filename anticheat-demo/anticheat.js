@@ -654,9 +654,12 @@ class AnticheatAnalyzer {
         const autocorr = denominator !== 0 ? numerator / denominator : 0;
 
         // Human typing typically has slight positive autocorrelation (0.1-0.5)
-        // Pure random has ~0, perfect pattern has ~1
+        // Except at extremely high speeds where lag-1 autocorrelation can fall below 0.05.
+        // We adjusted the expected minimum based on whether this is an extreme fast typist.
+        // this.thresholds.cvMax acts as our dynamic proxy. If scalingRatio is active (so cvMax > 0.95), we ignore the low bound.
+        const minAutocorr = (this.thresholds && this.thresholds.cvMax > 0.96) ? -0.1 : 0.05;
 
-        if (Math.abs(autocorr) < 0.05) {
+        if (Math.abs(autocorr) < minAutocorr) {
             return {
                 pass: false,
                 score: 40,
@@ -665,12 +668,12 @@ class AnticheatAnalyzer {
             };
         }
 
-        if (autocorr > 0.7) {
+        if (autocorr > 0.7 || (autocorr < -0.3 && minAutocorr !== -0.1)) {
             return {
                 pass: false,
                 score: 50,
                 autocorr: autocorr,
-                message: `Autocorrelation ${autocorr.toFixed(3)} too high - too predictable`
+                message: `Autocorrelation ${autocorr.toFixed(3)} abnormal - highly patterned`
             };
         }
 
@@ -678,14 +681,33 @@ class AnticheatAnalyzer {
             pass: true,
             score: 100,
             autocorr: autocorr,
-            message: `Autocorrelation ${autocorr.toFixed(3)} indicates natural temporal dependency`
+            message: `Autocorrelation ${autocorr.toFixed(3)} is consistent with manual typing`
         };
     }
 
     // ==================== MAIN ANALYSIS ====================
 
+    adjustThresholds(wpm) {
+        const referenceMeanSpacing = 60000 / (100 * 5); // 120ms
+        const targetMeanSpacing = 60000 / ((wpm || 100) * 5);
+
+        // High WPMs have heavily compressed timings. Lower ratio = faster wpm
+        const scalingRatio = Math.max(0.35, Math.min(1.0, targetMeanSpacing / referenceMeanSpacing));
+
+        this.thresholds.burstThreshold = Math.floor(80 * Math.sqrt(scalingRatio)); // scales down slightly to ~47ms at 250wpm
+        this.thresholds.longPauseThreshold = Math.floor(300 * scalingRatio); // scales down to ~105ms at 250wpm
+        this.thresholds.minLongPauseRatio = 0.02 * scalingRatio; // ultra-fast typists pause less frequently
+        this.thresholds.maxBurstRatio = 0.5 + ((1.0 - scalingRatio) * 0.4); // allow up to 76% bursts for super fast typists
+        this.thresholds.cvMax = 0.95 + ((1.0 - Math.sqrt(scalingRatio)) * 0.5); // allow up to ~1.15 CV
+        this.thresholds.spacingMin = 13.0; // human theoretical physiological minimum
+    }
+
     analyze(payload) {
         const result = payload.result || payload;
+
+        if (result.wpm || (result.stats && result.stats.wpm)) {
+            this.adjustThresholds(result.wpm || result.stats.wpm);
+        }
 
         const checks = {
             cvKeySpacing: this.checkCVKeySpacing(result.keySpacing),

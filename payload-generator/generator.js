@@ -97,6 +97,9 @@ class HumanTypingGenerator {
     generateKeySpacing(targetWpm, charCount, testDuration) {
         const spacings = [];
         const targetMeanSpacing = this.wpmToMeanSpacing(targetWpm);
+        // Dynamic scaling factor for high speeds
+        const wpmScale = Math.max(0.4, Math.min(1.0, targetMeanSpacing / 120));
+        const cvScale = Math.max(0.6, Math.min(1.0, targetMeanSpacing / 80));
 
         // Calculate how many pauses and where
         const numSpaces = Math.floor(charCount / 5); // Approximate word count
@@ -141,11 +144,11 @@ class HumanTypingGenerator {
             if (spacePositions.has(i)) {
                 // Word boundary: 15% chance of hesitation, otherwise thinking pause
                 if (Math.random() < 0.15) {
-                    spacing = this.logNormal(Math.log(300), 0.4) * fatigueFactor;
-                    spacing = Math.max(200, Math.min(800, spacing));
+                    spacing = this.logNormal(Math.log(300 * wpmScale), 0.4 * cvScale) * fatigueFactor;
+                    spacing = Math.max(150 * wpmScale, Math.min(800 * wpmScale, spacing));
                 } else {
-                    spacing = this.logNormal(Math.log(180), 0.35) * fatigueFactor;
-                    spacing = Math.max(100, Math.min(400, spacing));
+                    spacing = this.logNormal(Math.log(180 * wpmScale), 0.35 * cvScale) * fatigueFactor;
+                    spacing = Math.max(90 * wpmScale, Math.min(400 * wpmScale, spacing));
                 }
                 inBurst = false;
             }
@@ -174,19 +177,19 @@ class HumanTypingGenerator {
                 // Regular typing - log-normal distribution
                 else {
                     const logMu = Math.log(currentSpeedTarget);
-                    const logSigma = 0.3 + Math.random() * 0.15; // Variable sigma for natural variation
+                    const logSigma = (0.3 + Math.random() * 0.15) * cvScale; // Variable sigma for natural variation
                     spacing = this.logNormal(logMu, logSigma) * fatigueFactor;
 
                     // Occasional thinking pause (1.5% chance)
                     if (Math.random() < 0.015) {
-                        spacing = this.logNormal(Math.log(250), 0.3);
-                        spacing = Math.max(150, Math.min(400, spacing));
+                        spacing = this.logNormal(Math.log(250 * wpmScale), 0.3 * cvScale);
+                        spacing = Math.max(120 * wpmScale, Math.min(400 * wpmScale, spacing));
                     }
                 }
             }
 
-            // Clamp to reasonable bounds
-            spacing = Math.max(25, Math.min(800, spacing));
+            // Clamp to reasonable bounds (high wpm might cause very low spacing, let's keep hard floor at 20 so it remains humanly possible)
+            spacing = Math.max(20, Math.min(800, spacing));
 
             // Round to 1-2 decimal places (like real data)
             spacing = Math.round(spacing * 10) / 10;
