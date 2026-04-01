@@ -405,10 +405,13 @@ class HumanTypingGenerator {
      * Calculate character statistics based on accuracy
      */
     calculateCharStats(charTotal, accuracy) {
-        const correctChars = Math.round(charTotal * accuracy / 100);
-        const incorrectChars = Math.round(charTotal * (100 - accuracy) / 100);
-        const extraChars = Math.floor(incorrectChars * Math.random() * 0.3);
-        const missedChars = 0;
+        // Target correct chars based on accuracy
+        const correctChars = Math.round(charTotal * (accuracy / 100));
+        // Remaining are incorrect, but we want some extra/missed chars too
+        const rem = charTotal - correctChars;
+        const extraChars = Math.floor(rem * Math.random() * 0.3);
+        const incorrectChars = rem - extraChars;
+        const missedChars = 0; // Usually 0 in simple cases
 
         return [correctChars, incorrectChars, extraChars, missedChars];
     }
@@ -428,14 +431,21 @@ class HumanTypingGenerator {
             uid = ''
         } = config;
 
-        // Calculate character count based on WPM and duration
-        // WPM = (chars/5) * (60/seconds)
-        // chars = WPM * 5 * seconds / 60
-        const charTotal = Math.round(targetWpm * 5 * testDuration / 60);
+        // Base total characters needed for target WPM (including spaces)
+        let expectedCharTotal = Math.round(targetWpm * 5 * testDuration / 60);
 
-        // Generate key timing data
-        const keySpacing = this.generateKeySpacing(targetWpm, charTotal, testDuration);
-        const keyDuration = this.generateKeyDurations(charTotal, targetWpm);
+        // We want charStats sum exactly equal to expectedCharTotal
+        const charStats = this.calculateCharStats(expectedCharTotal, targetAcc);
+        const actualCharTotal = charStats.reduce((a, b) => a + b, 0); // Should be exactly expectedCharTotal
+
+        // Calculate precise mathematically matched WPMs
+        const actualWpm = Math.round((charStats[0] / 5) * (60 / testDuration) * 100) / 100;
+        // Raw WPM excludes missed chars in standard calculation, but includes extra/incorrect
+        const rawWpm = Math.round(((charStats[0] + charStats[1] + charStats[2]) / 5) * (60 / testDuration) * 100) / 100;
+
+        // Generate key timing data based on EXACT charTotal
+        const keySpacing = this.generateKeySpacing(targetWpm, actualCharTotal, testDuration);
+        const keyDuration = this.generateKeyDurations(actualCharTotal, targetWpm);
         const keyOverlap = this.calculateKeyOverlap(targetWpm, keyDuration, keySpacing);
 
         // Calculate actual timing
@@ -466,19 +476,14 @@ class HumanTypingGenerator {
         const keyConsistency = Math.round(this.kogasa(durationCV) * 100) / 100;
         const wpmConsistency = Math.round(this.kogasa(this.stdDev(chartWpm) / this.mean(chartWpm)) * 100) / 100;
 
-        // Character stats
-        const charStats = this.calculateCharStats(charTotal, targetAcc);
-
-        // Calculate actual WPM
-        const rawWpm = Math.round((charTotal / 5) * (60 / testDuration) * 100) / 100;
-        const actualWpm = Math.round((charStats[0] / 5) * (60 / testDuration) * 100) / 100;
+        // Character stats are already calculated at the top as charStats
 
         // Build result object (matching MonkeyType schema exactly)
         const result = {
             wpm: actualWpm,
             rawWpm: rawWpm,
             charStats: charStats,
-            charTotal: charTotal,
+            charTotal: actualCharTotal,
             acc: Math.round(targetAcc * 100) / 100,
             mode: mode,
             mode2: testDuration.toString(),
