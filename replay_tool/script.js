@@ -10,6 +10,51 @@ document.addEventListener('DOMContentLoaded', () => {
     const timestampInput = document.getElementById('timestamp');
     const responseContainer = document.getElementById('responseContainer');
     const responseBox = document.getElementById('responseBox');
+    const tokenInput = document.getElementById('token');
+    const rememberTokenCheckbox = document.getElementById('rememberToken');
+
+    // JWT Token persistence with localStorage
+    const STORAGE_KEY_TOKEN = 'mt_replay_jwt_token';
+    const STORAGE_KEY_REMEMBER = 'mt_replay_remember_token';
+
+    // Load saved token settings on page load
+    function loadSavedToken() {
+        const shouldRemember = localStorage.getItem(STORAGE_KEY_REMEMBER) === 'true';
+        rememberTokenCheckbox.checked = shouldRemember;
+        
+        if (shouldRemember) {
+            const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
+            if (savedToken) {
+                tokenInput.value = savedToken;
+            }
+        }
+    }
+
+    // Save token to localStorage if remember is checked
+    function saveToken() {
+        if (rememberTokenCheckbox.checked) {
+            localStorage.setItem(STORAGE_KEY_TOKEN, tokenInput.value);
+            localStorage.setItem(STORAGE_KEY_REMEMBER, 'true');
+        } else {
+            localStorage.removeItem(STORAGE_KEY_TOKEN);
+            localStorage.setItem(STORAGE_KEY_REMEMBER, 'false');
+        }
+    }
+
+    // Handle remember token checkbox change
+    rememberTokenCheckbox.addEventListener('change', () => {
+        saveToken();
+    });
+
+    // Save token on input change (if remember is checked)
+    tokenInput.addEventListener('input', () => {
+        if (rememberTokenCheckbox.checked) {
+            localStorage.setItem(STORAGE_KEY_TOKEN, tokenInput.value);
+        }
+    });
+
+    // Load saved token on page load
+    loadSavedToken();
 
     // Tab switching
     const tabBtns = document.querySelectorAll('.tab-btn');

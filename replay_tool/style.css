@@ -234,3 +234,21 @@ pre {
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+
+.remember-token {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    cursor: pointer;
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+.remember-token:hover {
+    color: var(--accent-color);
+}
+
+.remember-token input[type="checkbox"] {
+    accent-color: var(--accent-color);
+}
