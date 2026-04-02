@@ -20,7 +20,12 @@ The **Replay Tool** is a web-based graphical interface and proxy designed to tak
 4. **Dynamic Timestamp Injection**
    - Contains a "Set Now" button that recalculates the `timestamp` parameter to the exact current millisecond `Date.now()`. This is crucial because sending old payloads with historical timestamps could be flagged by backend chronologies.
 
-5. **CORS Bypass & Header Spoofing (PHP Proxy)**
+5. **Cryptographic Payload Forgery (Auto-Hashing)**
+   - The Monkeytype API utilizes a cryptographic tamper-prevention check. When the payload arrives, the server checks the `.hash` parameter against the object's body.
+   - Since the Replay Tool allows you to edit variables (WPM, Accuracy, Timestamps) _after_ generation, the original generator's hash instantly becomes invalid.
+   - The Replay Tool features an **"Auto-Hash"** toggle that hooks into the submission pipeline, completely stripping the old `.hash` key, recursively sorting the new payload alphabetically (matching the server's expected `object-hash` serialization format), transforming the object into a JSON string, and dynamically generating a fresh **SHA-1 Digest**. This ensures the data perfectly satisfies the backend tamper mitigations instantly upon sending without throwing an invalid hash error.
+
+6. **CORS Bypass & Header Spoofing (PHP Proxy)**
    - Because modern browsers enforce Strict CORS (Cross-Origin Resource Sharing), you cannot `POST` directly to `api.monkeytype.com` from a local HTML file or `localhost` environment.
    - The tool utilizes a strictly mapped backend `proxy.php` script to act as a middleman.
 
@@ -30,10 +35,11 @@ Here is the exact step-by-step pipeline of how the Replay Tool pushes data to th
 
 1. **Data Ingestion:** The user loads the generated JSON payload. The JS script (`script.js`) parses the JSON and populates the frontend form fields.
 2. **Preparation:** The user checks "Set Now" to update the timestamp and inputs their active JWT authorization token.
-3. **Internal Submission:** When the user clicks Submit, `script.js` gathers all the form fields, rebuilds the exact `CompletedEvent` JSON object (including massive arrays like `keySpacing` and the forged `hash`), and sends it securely to the local `proxy.php` file via a `fetch()` POST request.
-4. **Proxy Forwarding (`proxy.php`):**
+3. **Internal Submission:** When the user clicks Submit, `script.js` gathers all the form fields, rebuilds the exact `CompletedEvent` JSON object (including massive arrays like `keySpacing`).
+4. **Dynamic Hash Calculation:** If "Auto-Hash" is selected running behind the scenes, the script strips the current `hash` key from the object, runs the sorted object through a precise alphabetical structural parser, and hashes it via SHA-1 natively in the frontend to guarantee tampering verification isn't triggered.
+5. **Proxy Forwarding (`proxy.php`):**
    - The PHP script catches the local request.
    - It initializes a server-side `cURL` request targeted at `https://api.monkeytype.com/results`.
    - **Header Spoofing:** It explicitly sets the `Authorization: Bearer <TOKEN>` header, and overrides strict security headers by faking `User-Agent`, `Origin: https://monkeytype.com`, `Referer: https://monkeytype.com/`, and setting `X-Client-Version` to mimic exactly what a legitimate browser session would send.
    - It executes the POST request entirely from the backend environment to bypass CORS.
-5. **Response Handling:** The Monkeytype API responds (usually with a `200 OK` or `400 Bad Request`). The PHP proxy catches this HTTP status code and response body, returning it to the frontend container where `script.js` prints the API success or failure directly in the browser's UI.
+6. **Response Handling:** The Monkeytype API responds (usually with a `200 OK` or `400 Bad Request`). The PHP proxy catches this HTTP status code and response body, returning it to the frontend container where `script.js` prints the API success or failure directly in the browser's UI.
