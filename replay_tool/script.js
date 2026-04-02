@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function loadSavedToken() {
         const shouldRemember = localStorage.getItem(STORAGE_KEY_REMEMBER) === 'true';
         rememberTokenCheckbox.checked = shouldRemember;
-        
+
         if (shouldRemember) {
             const savedToken = localStorage.getItem(STORAGE_KEY_TOKEN);
             if (savedToken) {
